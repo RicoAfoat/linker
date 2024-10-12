@@ -1,8 +1,10 @@
 #include "SectionHeader.h"
 #include <cassert>
 
-size_t SectionHeader::getSectionHeaderSize(){
-    return size_t(static_cast<char*>(getComponent<void>("EndOfSectionHeader")) - static_cast<char*>(StartAddr));
+void SectionHeader::initName(void* NameSectionAddr){
+    auto NameOffset=getNameOffset();
+    NamePtr=(char*)NameSectionAddr+NameOffset;
+    std::printf("%s\n",NamePtr);
 }
 
 SectionHeader* SectionHeader::getNewSectionHeader(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size){
@@ -16,6 +18,6 @@ SectionHeader* SectionHeader::getNewSectionHeader(DataLayOutEnum ChoosedLayout,v
     }
     else
         assert(0&&"unimp");
-    assert(Size>=Shdr->getSectionHeaderSize()&&"file does not contain enough data for SectionHeader");
+    assert(Size>=Shdr->getSize()&&"file does not contain enough data for SectionHeader");
     return Shdr;
 }

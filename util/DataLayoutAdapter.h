@@ -16,6 +16,10 @@ protected:
     void* StartAddr;
     size_t Size;
 public:
+    inline void* getStartAddr(){return StartAddr;}
+    
+    inline size_t getSize(){return Size;}
+
     template<typename T>
     T* getComponent(std::string Name){
         auto& [Addr,EleSize]=ComponentMap[Name];

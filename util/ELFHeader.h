@@ -6,14 +6,18 @@ class ELFHeader:public SystemStructAdapter{
 public:
     static ELFHeader* getNewELFHeader(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size);
 
-    size_t getELFHeaderSize();
-
     ELFHeader(void* StartAddr,size_t Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList):SystemStructAdapter(StartAddr,Size,initList){};
 
-    // inline uint16_t getShnum(bool GetRaw=true){
-    //     auto Shnum = loadComponentAs<uint16_t>("e_shnum");
-    //     if(GetRaw||Shnum!=0)return Shnum;
-    //     assert(0&&"unsupported yet");
-    // };
+    inline uint64_t getShoff(){
+        return loadComponentAs<uint64_t>("e_shoff");
+    }
+
+    inline uint16_t getShnum(){
+        return loadComponentAs<uint16_t>("e_shnum");
+    }
+
+    inline uint16_t getShstrndx() {
+        return loadComponentAs<uint16_t>("e_shstrndx");
+    }
 };
 

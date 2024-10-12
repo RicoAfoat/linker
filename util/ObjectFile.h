@@ -6,9 +6,10 @@
 #include "SectionHeader.h"
 class ObjectFile{
     std::vector<uint8_t> FileStorage;
+    
     std::unique_ptr<ELFHeader> Ehdr;
-
     std::vector<std::unique_ptr<SectionHeader>> Shdrs;
+
 public:
     static ObjectFile* OpenWith(char*);
     ObjectFile()=default;
@@ -17,10 +18,23 @@ public:
     ELFHeader& getEhdr();
 
     inline uint64_t getNumSection(){
-        uint64_t Shnum = Ehdr->loadComponentAs<uint16_t>("e_shnum");
+        uint64_t Shnum = Ehdr->getShnum();
         if(Shnum!=0)return Shnum;
         else{
-            return Shdrs[0]->loadComponentAs<uint64_t>("sh_size");
+            return Shdrs[0]->getShSize();
         }
-    }   
+    }
+
+    inline uint32_t getShstrndx(){
+        uint32_t Shstrndx=Ehdr->getShstrndx();
+        if(Shstrndx==UINT16_MAX){
+            Shstrndx=Shdrs[0]->getShLink();
+        }
+        return Shstrndx;
+    }
+
+    inline void* getSectionAddr(uint32_t Idx){
+        assert(Shdrs.size()>Idx);
+        return FileStorage.data()+Shdrs[Idx]->getSectionOffset();
+    }
 };
