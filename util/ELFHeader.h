@@ -1,11 +1,10 @@
 #pragma once
+#define GET_ELFHeaderLayOut
 #include "DataLayoutAdapter.h"
 
 class ELFHeader:public SystemStructAdapter{
-    bool check();
 public:
-    static ELFHeader* getNewELFHeader(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size);
-
+    bool check() override;
     ELFHeader(void* StartAddr,size_t Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList):SystemStructAdapter(StartAddr,Size,initList){};
 
     inline uint64_t getShoff(){

@@ -13,7 +13,7 @@
             "cwd": "${workspaceFolder}",
             "targetArchitecture": "x64",
             "stopAtEntry": false,
-            "args": ["tests/test.o"],
+            "args": ["tests/main.o"],
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",

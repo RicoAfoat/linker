@@ -23,14 +23,14 @@ ObjectFile* ObjectFile::OpenWith(char* FileName){
     file.read((char*)buffer.data(), size);
     file.close();
     
-    OF->Ehdr.reset(ELFHeader::getNewELFHeader(BIT64, buffer.data(), buffer.size()));
+    OF->Ehdr.reset(getNew<ELFHeader>(BIT64, buffer.data(), buffer.size()));
     
     // Get All Section Headers
     {
         auto Shoff=OF->Ehdr->getShoff();
         uint8_t* ptr=buffer.data()+Shoff;
         auto restSize=buffer.size()-Shoff;
-        OF->Shdrs.emplace_back(SectionHeader::getNewSectionHeader(BIT64, ptr,restSize));
+        OF->Shdrs.emplace_back(getNew<SectionHeader>(BIT64, ptr,restSize));
         
         auto ShdrSize=OF->Shdrs[0]->getSize();
 
@@ -38,7 +38,7 @@ ObjectFile* ObjectFile::OpenWith(char* FileName){
         for(auto I=NumSections;I>1;I--){
             ptr+=ShdrSize;
             restSize-=ShdrSize;
-            OF->Shdrs.emplace_back(SectionHeader::getNewSectionHeader(
+            OF->Shdrs.emplace_back(getNew<SectionHeader>(
                 BIT64,
                 ptr,
                 restSize
@@ -48,9 +48,8 @@ ObjectFile* ObjectFile::OpenWith(char* FileName){
         // init all sections Name
         assert(OF->Shdrs[OF->getShstrndx()]->getShType()==0x3);
         auto NameSectionAddr=OF->getSectionAddr(OF->getShstrndx());
-        for(auto I=0;I<NumSections;I++){
+        for(auto I=0;I<NumSections;I++)
             OF->Shdrs[I]->initName(NameSectionAddr);
-        }
     }
     return OF;
 }

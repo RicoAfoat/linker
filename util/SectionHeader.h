@@ -1,4 +1,5 @@
 #pragma once
+#define GET_SectionHeaderLayOut
 #include "DataLayoutAdapter.h"
 
 class SectionHeader:public SystemStructAdapter{
@@ -8,8 +9,6 @@ public:
 
     SectionHeader(void* StartAddr,size_t Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList):SystemStructAdapter(StartAddr,Size,initList){};
     
-    static SectionHeader* getNewSectionHeader(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size);
-
     inline uint32_t getNameOffset(){
         return loadComponentAs<uint32_t>("sh_name");
     }

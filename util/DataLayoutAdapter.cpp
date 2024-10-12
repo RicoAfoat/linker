@@ -1,4 +1,7 @@
+#define GET_DataLayoutAdapter_Placeholder
 #include "DataLayoutAdapter.h"
+
+bool SystemStructAdapter::check(){return true;}
 
 SystemStructAdapter::SystemStructAdapter(void* _StartAddr,size_t _Size,std::initializer_list<std::tuple<std::string, size_t,uint8_t>> initList){
     StartAddr=_StartAddr;

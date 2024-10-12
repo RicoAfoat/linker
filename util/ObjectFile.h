@@ -10,6 +10,8 @@ class ObjectFile{
     std::unique_ptr<ELFHeader> Ehdr;
     std::vector<std::unique_ptr<SectionHeader>> Shdrs;
 
+    
+
 public:
     static ObjectFile* OpenWith(char*);
     ObjectFile()=default;
