@@ -4,13 +4,16 @@
 #include <memory>
 #include "ELFHeader.h"
 #include "SectionHeader.h"
+#include "ELFSym.h"
+#include <functional>
+
 class ObjectFile{
     std::vector<uint8_t> FileStorage;
     
     std::unique_ptr<ELFHeader> Ehdr;
     std::vector<std::unique_ptr<SectionHeader>> Shdrs;
 
-    
+    std::vector<std::unique_ptr<ELFSym>> SymbolTable;
 
 public:
     static ObjectFile* OpenWith(char*);
@@ -39,4 +42,16 @@ public:
         assert(Shdrs.size()>Idx);
         return FileStorage.data()+Shdrs[Idx]->getSectionOffset();
     }
+
+    inline void* getSectionAddr(SectionHeader* Shdr){
+        return FileStorage.data()+Shdr->getSectionOffset();
+    }
+
+    inline std::vector<std::unique_ptr<SectionHeader>>& getShdrs(){
+        return Shdrs;
+    }
+
+    std::vector<SectionHeader*> getShdrs(std::function<bool(SectionHeader*)>);
+
+    inline std::vector<std::unique_ptr<ELFSym>>& getSymbolTable(){return SymbolTable;}
 };

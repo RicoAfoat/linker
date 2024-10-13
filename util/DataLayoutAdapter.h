@@ -51,6 +51,37 @@ public:
     SystemStructAdapter(void* _StartAddr, size_t _Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList);
 };
 
+class Attribute{
+public:
+    virtual ~Attribute()=default;
+};
+
+template<typename T>
+class AttributeStringNameOffset:public Attribute{
+    char* NamePtr=nullptr;
+public:
+    AttributeStringNameOffset()=default;
+    void dumpName(){
+        assert(NamePtr!=nullptr&&"initAttributeStringNameOffset not called");
+        std::printf("%s\n",NamePtr);
+    }
+    void initAttributeStringNameOffset(void* NameSectionAddr){
+        auto derived=dynamic_cast<T*>(this);
+        auto NameOffset=derived->getNameOffset();
+        NamePtr=(char*)NameSectionAddr+NameOffset;
+        dumpName();
+    }
+};
+
+template <typename T,const char* Name>
+class AttributeGetNameOffset:public Attribute{
+public:
+    uint32_t getNameOffset(){
+        auto derived=dynamic_cast<T*>(this);
+        return derived->template loadComponentAs<uint32_t>(Name);
+    }
+};
+
 template<typename T>
 T* getNew(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size){
     T* Storage=nullptr;
