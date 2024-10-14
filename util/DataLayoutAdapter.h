@@ -5,7 +5,7 @@
 #include <string>
 #include <cassert>
 
-enum DataLayOutEnum{
+enum class DataLayOutEnum : uint8_t {
     BIT64,
     BIT32
 };
@@ -83,9 +83,9 @@ public:
 };
 
 template<typename T>
-T* getNew(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size){
+T* getNewImpl(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size){
     T* Storage=nullptr;
-    if(ChoosedLayout==BIT64){
+    if(ChoosedLayout==DataLayOutEnum::BIT64){
         Storage=new T(
             StartAddr,
 #include "../conf/RISCV64.def"
@@ -98,10 +98,24 @@ T* getNew(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size){
     return Storage;
 }
 
+template<typename T>
+T* getNewImpl(void* StartAddr,size_t Size){
+    T* Storage=new T(
+        StartAddr,
+#include "../conf/Universal.def"
+    );
+    return Storage;
+}
+
+template<typename T,typename... Args>
+T* getNew(Args&&... args){
+    return getNewImpl<T>(std::forward<Args>(args)...);
+}
+
 class ELFHeader;
 class SectionHeader;
 class ELFSym;
 
-extern template ELFHeader* getNew<ELFHeader>(DataLayOutEnum, void*, size_t);
-extern template SectionHeader* getNew<SectionHeader>(DataLayOutEnum, void*, size_t);
-extern template ELFSym* getNew<ELFSym>(DataLayOutEnum, void*, size_t);
+extern template ELFHeader* getNew<ELFHeader,DataLayOutEnum, void*, size_t> (DataLayOutEnum&&, void*&&, size_t&&);
+extern template SectionHeader* getNew<SectionHeader,DataLayOutEnum, void*, size_t> (DataLayOutEnum&&, void*&&, size_t&&);
+extern template ELFSym* getNew<ELFSym,DataLayOutEnum, void*, size_t> (DataLayOutEnum&&, void*&&, size_t&&);

@@ -46,6 +46,7 @@
         "typeinfo": "cpp",
         "*.def": "cpp",
         "fstream": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "deque": "cpp"
     }
 }

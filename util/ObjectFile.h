@@ -1,22 +1,23 @@
 #pragma once
-#include <cstdint>
-#include <vector>
-#include <memory>
 #include "ELFHeader.h"
 #include "SectionHeader.h"
 #include "ELFSym.h"
+#include "FileBuffer.h"
+
+#include <cstdint>
+#include <vector>
+#include <memory>
 #include <functional>
 
-class ObjectFile{
-    std::vector<uint8_t> FileStorage;
-    
+
+class ObjectFile:public FileBuffer<ObjectFile> {
     std::unique_ptr<ELFHeader> Ehdr;
     std::vector<std::unique_ptr<SectionHeader>> Shdrs;
-
     std::vector<std::unique_ptr<ELFSym>> SymbolTable;
 
 public:
-    static ObjectFile* OpenWith(char*);
+    void initFileStructure() override;
+
     ObjectFile()=default;
     std::vector<uint8_t>& getFileStorage();
     

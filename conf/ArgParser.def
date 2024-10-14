@@ -84,7 +84,7 @@ new ExpectedWithPrefix(
 /*Parse -l*/
 new ExpectedWithPrefix(
     "l",[](char* Library){
-        Singleton<Context>().Remainings.push_back("-l"+std::string(Library));
+        Singleton<Context>().ArchiveFiles.push_back("lib"+std::string(Library)+".a");
         return MatchSuccess;
     }
 ),

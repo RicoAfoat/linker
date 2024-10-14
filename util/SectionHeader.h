@@ -24,11 +24,10 @@ enum class SH_Type_Enum: uint32_t {
   SHT_LOOS = 0x60000000,
 };
 
-static constexpr const char SH_NAME[] = "sh_name";
+constexpr const char SH_NAME[] = "sh_name";
 class SectionHeader : public SystemStructAdapter,
                       public AttributeGetNameOffset<SectionHeader,SH_NAME>,
                       public AttributeStringNameOffset<SectionHeader> {
-  void *NamePtr = nullptr;
 public:
   SectionHeader(
       void *StartAddr, size_t Size,

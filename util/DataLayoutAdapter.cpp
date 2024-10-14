@@ -1,4 +1,3 @@
-#define GET_DataLayoutAdapter_Placeholder
 #include "DataLayoutAdapter.h"
 
 bool SystemStructAdapter::check(){return true;}

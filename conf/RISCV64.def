@@ -1,10 +1,9 @@
-#ifdef GET_DataLayoutAdapter_Placeholder
-0x0,{}
-#undef GET_DataLayoutAdapter_Placeholder
-#endif
+// #ifdef GET_DataLayoutAdapter_Placeholder
+// 0x0,{}
+// #undef GET_DataLayoutAdapter_Placeholder
+// #endif
 
 #ifdef GET_ELFHeaderLayOut
-
 0x40,
 {
     {"e_ident",0x0,0x10},
@@ -23,10 +22,8 @@
     {"e_shstrndx",0x3E,2},
     {"EndOfELFHeader",0x40,0},
 }
-
 #undef GET_ELFHeaderLayOut
-#endif
-
+#else
 #ifdef GET_SectionHeaderLayOut
 0x40,
 {
@@ -43,8 +40,7 @@
     {"EndOfSectionHeader",0x40,0},
 }
 #undef GET_SectionHeaderLayOut
-#endif
-
+#else
 #ifdef GET_Elf_Sym
 24,
 {
@@ -57,4 +53,8 @@
     {"EndOfSym",24,0},
 }
 #undef GET_Elf_Sym
+#else
+0x0,{}
 #endif 
+#endif
+#endif

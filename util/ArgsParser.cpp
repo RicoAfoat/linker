@@ -14,7 +14,7 @@ std::vector<std::string> ArgParser::getOptionDashform(std::string Name){
 }
 
 ExpectArgStatus ExpectedInputFileArgs::operator()(char* arg){
-    Singleton<Context>().Remainings.push_back(arg);
+    Singleton<Context>().ObjectFiles.push_back(arg);
     return MatchSuccess;
 }
 
@@ -98,13 +98,21 @@ void ArgParser::parse(int argc,char** argv){
 
 void ArgParser::dumpContext(){
     auto& Ctx=Singleton<Context>();
+    
     std::cerr<<"Output File: \n"<<Ctx.OutputFile<<std::endl<<std::endl;
+    
     std::cerr<<"Remaining Args: "<<std::endl;
-    for(auto& File:Ctx.Remainings)
+    for(auto& File:Ctx.ObjectFiles)
         std::cerr<<File<<" ";
     std::cerr<<std::endl<<std::endl;
+    
     std::cerr<<"Library Paths: "<<std::endl;
     for(auto &LibPath:Ctx.LibraryPaths)
+        std::cerr<<LibPath<<" ";
+    std::cerr<<std::endl<<std::endl;
+
+    std::cerr<<"ArchiveFiles: "<<std::endl;
+    for(auto &LibPath:Ctx.ArchiveFiles)
         std::cerr<<LibPath<<" ";
     std::cerr<<std::endl<<std::endl;
 }
