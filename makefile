@@ -1,13 +1,13 @@
 # Compiler and flags
 CXX = clang++
-CXXFLAGS = -std=c++20 -O0 -g
+CXXFLAGS = -std=c++20 -O0 -g -MMD -MP
 
 # Directories to search for source files
 SRC_DIRS = ./util
 BUILD_DIR = ./build
 
 # Output executable
-TARGET = $(BUILD_DIR)/linker
+TARGET = $(BUILD_DIR)/ld
 
 # Find all .cpp files in the specified directories
 SRCS = $(shell find $(SRC_DIRS) -name '*.cpp')
@@ -15,6 +15,8 @@ SRCS += ./main.cpp
 
 # Generate object file names in the build directory, preserving directory structure
 OBJS = $(SRCS:%.cpp=$(BUILD_DIR)/%.o)
+
+DEPS = $(OBJS:.o=.d)
 
 # Default target
 all: $(TARGET)
@@ -27,6 +29,8 @@ $(BUILD_DIR)/%.o: %.cpp
 # Link the executable
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
+
+-include $(DEPS)
 
 # Clean up
 clean:

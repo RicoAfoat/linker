@@ -1,0 +1,93 @@
+/*Start Ignore*/
+
+/*plugin*/
+
+new ExpectedWithFollow(
+    "plugin",[](char* Plugin){
+        return MatchSuccess;
+    }
+),
+
+/*plugin-opt*/
+new ExpectedWithPrefix(
+    "plugin-opt",[](char* PluginOpt){
+        return MatchSuccess;
+    }
+),
+
+/*sysroot*/
+new ExpectedWithPrefix(
+    "sysroot",[](char* Sysroot){
+        return MatchSuccess;
+    }
+),
+
+/*as-neeeded*/
+new ExpectedFlag(
+    "as-needed",[](char*){
+        return MatchSuccess;
+    }
+),
+
+/*static*/
+new ExpectedFlag(
+    "static",[](char*){
+        return MatchSuccess;
+    }
+),
+
+/*start-group*/
+new ExpectedFlag(
+    "start-group",[](char*){
+        return MatchSuccess;
+    }
+),
+
+/*end-group*/
+new ExpectedFlag(
+    "end-group",[](char*){
+        return MatchSuccess;
+    }
+),
+
+/*End Ignore*/
+
+/*Parse -o and -output*/
+new ExpectedWithFollow(
+    "o",[](char* OutputFile){
+        Singleton<Context>().OutputFile=OutputFile;
+        return MatchSuccess;
+    }
+),
+new ExpectedWithFollow(
+    "output",[](char* OutputFile){
+        Singleton<Context>().OutputFile=OutputFile;
+        return MatchSuccess;
+    }
+),
+/*Parse -melf64riscv*/
+new ExpectedWithPrefix(
+    "m",[](char* Machine){
+        assert(strcmp(Machine,"elf64lriscv")==0);
+        return MatchSuccess;
+    }
+),
+
+/*Parse -L.*/
+new ExpectedWithPrefix(
+    "L",[](char* LibraryPath){
+        Singleton<Context>().LibraryPaths.push_back(LibraryPath);
+        return MatchSuccess;
+    }
+),
+
+/*Parse -l*/
+new ExpectedWithPrefix(
+    "l",[](char* Library){
+        Singleton<Context>().Remainings.push_back("-l"+std::string(Library));
+        return MatchSuccess;
+    }
+),
+
+/*Parse the file*/
+new ExpectedInputFileArgs()
