@@ -1,7 +1,5 @@
-#include "./util/Singleton.h"
 #include "./util/ArgsParser.h"
-#include "./util/ObjectFile.h"
-#include "./util/ArchiveFile.h"
+#include "./util/ExtractArchive.h"
 #include <iostream>
 int main(int argc,char **argv){
     std::cerr<<"--------------------"<<std::endl;

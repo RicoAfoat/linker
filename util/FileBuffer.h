@@ -11,6 +11,7 @@ protected:
     std::vector<uint8_t> FileStorage;
     std::pair<uint8_t*,uint32_t> FileRef;
 private:
+    std::string FileName;
     std::vector<uint8_t>& getFileStorage(){return FileStorage;}
 public:
     FileBuffer()=default;
@@ -34,13 +35,16 @@ public:
         file.close();
 
         OF->FileRef=std::make_pair(buffer.data(),buffer.size());
+        OF->FileName=FileName;
         OF->initFileStructure();
         
         return OF;
     }
-    static T* OpenWith(uint8_t* Addr,uint32_t Size){
+    // used for those extract from archive files
+    static T* OpenWith(std::string FileName,uint8_t* Addr,uint32_t Size){
         auto OF=new T();
         OF->FileRef=std::make_pair(Addr,Size);
+        OF->FileName=FileName;
         OF->initFileStructure();
         return OF;
     }

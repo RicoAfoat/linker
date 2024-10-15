@@ -1,14 +1,7 @@
 #pragma once
 #include <string>
 #include <functional>
-
-struct Context{
-    std::string OutputFile="a.out";
-    std::vector<std::string> LibraryPaths;
-    std::vector<std::string> ArchiveFiles;
-    std::vector<std::string> ObjectFiles;
-};
-
+#include "Context.h"
 namespace ArgParser{
 
 enum ExpectArgStatus{

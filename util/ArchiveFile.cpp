@@ -1,6 +1,5 @@
-#include "Singleton.h"
-#include "ArchiveFile.h"
-#include "ArHeader.h"
+#include "Context.h"
+
 #include <fstream>
 #include <iostream>
 #include <cassert>
@@ -37,33 +36,12 @@ void ArchiveFile::initFileStructure(){
     }
     
     // use Strtab to read all Obj names(if there're long name)
-    for(auto& hdr:ArHdrs)
-        std::cerr<<hdr->getObjfileName(Strtab)<<std::endl;
+    for(auto& hdr:ArHdrs){
+        auto Name=hdr->getObjfileName(Strtab);
+        auto ObjAddr=hdr->getArSectionAddr();
+        auto ObjSize=hdr->getArSectionSize();
+    }
+        // std::cerr<<hdr->getObjfileName(Strtab)<<std::endl;
 
     delete Strtab;
-}
-
-void UnzipArchiveFiles::readArchiveFile(std::string fileName){
-    auto& IncludeDir=Singleton<Context>().LibraryPaths;
-
-    for(auto& Dir:IncludeDir){
-        // construct the path
-        std::string path=Dir+"/"+fileName;
-        std::cerr<<"Trying to open "<<path<<std::endl;
-        
-        auto ArchiveFile=ArchiveFile::OpenWith(path);
-        if(ArchiveFile==nullptr)continue;
-
-        delete ArchiveFile;return;
-    }
-
-    assert(0&&"Cannot find the file");
-}
-
-void UnzipArchiveFiles::unzip(){
-    auto& Ctx=Singleton<Context>();
-    for(auto& ArchiveFile:Ctx.ArchiveFiles){
-        std::cerr<<"Unzipping "<<ArchiveFile<<std::endl;
-        readArchiveFile(ArchiveFile);
-    }
 }

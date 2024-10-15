@@ -10,7 +10,10 @@
 #include <functional>
 
 
+class ArchiveFile;
 class ObjectFile:public FileBuffer<ObjectFile> {
+    ArchiveFile* Archive=nullptr;
+    
     std::unique_ptr<ELFHeader> Ehdr;
     std::vector<std::unique_ptr<SectionHeader>> Shdrs;
     std::vector<std::unique_ptr<ELFSym>> SymbolTable;
@@ -53,4 +56,7 @@ public:
     std::vector<SectionHeader*> getShdrs(std::function<bool(SectionHeader*)>);
 
     inline std::vector<std::unique_ptr<ELFSym>>& getSymbolTable(){return SymbolTable;}
+
+    inline void setArchiveFile(ArchiveFile* _Ar){Archive=_Ar;}
+    inline ArchiveFile* getArchiveFile(){return Archive;}
 };
