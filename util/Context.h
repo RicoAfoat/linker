@@ -10,5 +10,6 @@ struct Context{
     std::vector<std::string> ArchiveFiles;
     std::vector<std::string> ObjectFiles;
 
+    std::vector<std::unique_ptr<ArchiveFile>> Archives;
     std::vector<std::unique_ptr<ObjectFile>> Objs;
 };

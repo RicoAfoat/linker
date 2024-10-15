@@ -20,6 +20,8 @@ public:
     
     std::pair<uint8_t*,uint32_t> getFileBuffer(){return FileRef;}
 
+    inline std::string getFileName(){return FileName;}
+
     static T* OpenWith(std::string FileName){
         std::ifstream file(FileName, std::ios::binary | std::ios::ate);
         if (!file.is_open())

@@ -42,7 +42,9 @@ void ArchiveFile::initFileStructure(){
         auto ObjAddr=hdr->getArSectionAddr();
         auto ObjSize=hdr->getArSectionSize();
         std::cerr<<"Extracting Object File:"<<Name<<"\n";
-        Singleton<Context>().Objs.emplace_back(ObjectFile::OpenWith(Name,(uint8_t*)ObjAddr,ObjSize));
+        auto Obj=ObjectFile::OpenWith(Name,(uint8_t*)ObjAddr,ObjSize);
+        Obj->setArchiveFile(this);
+        Singleton<Context>().Objs.emplace_back(Obj);
     }
     
     delete Strtab;

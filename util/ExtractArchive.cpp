@@ -12,8 +12,8 @@ void UnzipArchiveFiles::readArchiveFile(std::string fileName){
         
         auto ArchiveFile=ArchiveFile::OpenWith(path);
         if(ArchiveFile==nullptr)continue;
-
-        delete ArchiveFile;return;
+        Singleton<Context>().Archives.emplace_back(ArchiveFile);
+        return;
     }
 
     assert(0&&"Cannot find the file");
@@ -25,4 +25,16 @@ void UnzipArchiveFiles::unzip(){
         std::cerr<<"Unzipping "<<ArchiveFile<<std::endl;
         readArchiveFile(ArchiveFile);
     }
+
+    for(auto& Obj:Ctx.ObjectFiles){
+        std::cerr<<"Read direct object file:"<<Obj<<std::endl;
+        auto Objfile=ObjectFile::OpenWith(Obj);
+        assert(Objfile!=nullptr&&"Object file not found");
+        Ctx.Objs.emplace_back(Objfile);
+    }
+
+    // initialize liveness
+    for(auto& Obj:Ctx.Objs)
+        if(Obj->getArchiveFile()==nullptr)
+            std::cerr<<"!!!Find live file!!!:"<<Obj->getFileName()<<std::endl;
 }
