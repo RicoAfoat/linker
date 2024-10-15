@@ -19,8 +19,6 @@ public:
     void initFileStructure() override;
 
     ObjectFile()=default;
-    std::vector<uint8_t>& getFileStorage();
-    
     ELFHeader& getEhdr();
 
     inline uint64_t getNumSection(){

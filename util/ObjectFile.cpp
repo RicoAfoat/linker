@@ -4,19 +4,17 @@
 #include <cassert>
 #include <iomanip>
 
-std::vector<uint8_t>&ObjectFile::getFileStorage(){return FileStorage;}
-
 ELFHeader& ObjectFile::getEhdr(){return *Ehdr;}
 
 void ObjectFile::initFileStructure(){
-    auto& buffer=getFileStorage();
-    Ehdr.reset(getNew<ELFHeader>(DataLayOutEnum::BIT64, buffer.data(), buffer.size()));
+    const auto [BufferAddr,Limi]=getFileBuffer();
+    Ehdr.reset(getNew<ELFHeader>(DataLayOutEnum::BIT64, BufferAddr, Limi));
     
     // Get All Section Headers
     {
         auto Shoff=Ehdr->getShoff();
-        uint8_t* ptr=buffer.data()+Shoff;
-        auto restSize=buffer.size()-Shoff;
+        uint8_t* ptr=BufferAddr+Shoff;
+        auto restSize=Limi-Shoff;
         Shdrs.emplace_back(getNew<SectionHeader>(DataLayOutEnum::BIT64, ptr,restSize));
         
         auto ShdrSize=Shdrs[0]->getSize();

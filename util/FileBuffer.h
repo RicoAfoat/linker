@@ -9,11 +9,15 @@ template<typename T>
 class FileBuffer{
 protected:
     std::vector<uint8_t> FileStorage;
+    std::pair<uint8_t*,uint32_t> FileRef;
+private:
+    std::vector<uint8_t>& getFileStorage(){return FileStorage;}
 public:
     FileBuffer()=default;
     virtual ~FileBuffer()=default;
     virtual void initFileStructure()=0;
-    std::vector<uint8_t>& getFileStorage(){return FileStorage;}
+    
+    std::pair<uint8_t*,uint32_t> getFileBuffer(){return FileRef;}
 
     static T* OpenWith(std::string FileName){
         std::ifstream file(FileName, std::ios::binary | std::ios::ate);
@@ -29,8 +33,15 @@ public:
         file.read((char*)buffer.data(), size);
         file.close();
 
+        OF->FileRef=std::make_pair(buffer.data(),buffer.size());
         OF->initFileStructure();
         
+        return OF;
+    }
+    static T* OpenWith(uint8_t* Addr,uint32_t Size){
+        auto OF=new T();
+        OF->FileRef=std::make_pair(Addr,Size);
+        OF->initFileStructure();
         return OF;
     }
 };

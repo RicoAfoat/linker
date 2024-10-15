@@ -48,6 +48,9 @@ public:
             return (T)*(uint64_t*)(Addr);
         }
     }
+
+    std::string loadRAW(std::string Name);
+    
     SystemStructAdapter(void* _StartAddr, size_t _Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList);
 };
 
