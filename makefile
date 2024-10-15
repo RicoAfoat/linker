@@ -1,5 +1,5 @@
 # Compiler and flags
-CXX = clang++
+CXX = g++
 CXXFLAGS = -std=c++20 -O0 -g -MMD -MP
 
 # Directories to search for source files

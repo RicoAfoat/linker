@@ -1,4 +1,5 @@
+#define GET_SectionHeaderLayOut
 #include "SectionHeader.h"
 #include <cassert>
 
-template SectionHeader* getNew<SectionHeader,DataLayOutEnum, void*, size_t>(DataLayOutEnum&&, void*&&, size_t&&);
+template SectionHeader* getNewImpl<SectionHeader>(DataLayOutEnum, void*, size_t);

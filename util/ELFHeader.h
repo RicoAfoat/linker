@@ -1,5 +1,4 @@
 #pragma once
-#define GET_ELFHeaderLayOut
 #include "DataLayoutAdapter.h"
 
 class ELFHeader:public SystemStructAdapter{
@@ -19,4 +18,6 @@ public:
         return loadComponentAs<uint16_t>("e_shstrndx");
     }
 };
+
+extern template ELFHeader* getNewImpl(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size);
 

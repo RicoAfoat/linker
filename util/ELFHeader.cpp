@@ -1,7 +1,8 @@
+#define GET_ELFHeaderLayOut
 #include "ELFHeader.h"
 #include <cassert>
 
-template ELFHeader* getNew<ELFHeader,DataLayOutEnum, void*, size_t>(DataLayOutEnum&&, void*&&, size_t&&);
+template ELFHeader* getNewImpl<ELFHeader>(DataLayOutEnum, void*, size_t);
 
 bool ELFHeader::check(){
     auto EhdrSize=getSize();

@@ -42,11 +42,11 @@ public:
 
     inline void* getSectionAddr(uint32_t Idx){
         assert(Shdrs.size()>Idx);
-        return FileStorage.data()+Shdrs[Idx]->getSectionOffset();
+        return FileRef.first+Shdrs[Idx]->getSectionOffset();
     }
 
     inline void* getSectionAddr(SectionHeader* Shdr){
-        return FileStorage.data()+Shdr->getSectionOffset();
+        return FileRef.first+Shdr->getSectionOffset();
     }
 
     inline std::vector<std::unique_ptr<SectionHeader>>& getShdrs(){

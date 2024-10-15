@@ -1,5 +1,4 @@
 #pragma once
-#define GET_SectionHeaderLayOut
 #include "DataLayoutAdapter.h"
 
 enum class SH_Type_Enum: uint32_t {
@@ -32,7 +31,9 @@ public:
   SectionHeader(
       void *StartAddr, size_t Size,
       std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList)
-      : SystemStructAdapter(StartAddr, Size, initList){};
+      : SystemStructAdapter(StartAddr, Size, initList){
+
+      };
 
   // inline uint32_t getNameOffset() {
   //   return loadComponentAs<uint32_t>("sh_name");
@@ -52,3 +53,5 @@ public:
     return loadComponentAs<uint64_t>("sh_offset");
   }
 };
+
+extern template SectionHeader* getNewImpl(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size);

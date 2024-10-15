@@ -80,3 +80,5 @@ public:
         return ObjFileName;
     }
 };
+
+extern template ArHdr* getNewImpl(void*, size_t);

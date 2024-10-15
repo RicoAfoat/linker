@@ -1,27 +1,2 @@
-../build/ld
--plugin /home/r1c0/riscv/bin/../libexec/gcc/riscv64-unknown-linux-gnu/13.2.0/liblto_plugin.so 
--plugin-opt=/home/r1c0/riscv/bin/../libexec/gcc/riscv64-unknown-linux-gnu/13.2.0/lto-wrapper 
--plugin-opt=-fresolution=/tmp/ccU8BZ4p.res 
--plugin-opt=-pass-through=-lgcc 
--plugin-opt=-pass-through=-lgcc_eh 
--plugin-opt=-pass-through=-lc
---sysroot=/home/r1c0/riscv/bin/../sysroot -melf64lriscv
--static
--o main
-/home/r1c0/riscv/bin/../sysroot/usr/lib/crt1.o
-/home/r1c0/riscv/bin/../lib/gcc/riscv64-unknown-linux-gnu/13.2.0/crti.o
-/home/r1c0/riscv/bin/../lib/gcc/riscv64-unknown-linux-gnu/13.2.0/crtbeginT.o
--L../build -L/home/r1c0/riscv/bin/../lib/gcc/riscv64-unknown-linux-gnu/13.2.0
--L/home/r1c0/riscv/bin/../lib/gcc
--L/home/r1c0/riscv/bin/../lib/gcc/riscv64-unknown-linux-gnu/13.2.0/../../../../riscv64-unknown-linux-gnu/lib
--L/home/r1c0/riscv/bin/../sysroot/lib
--L/home/r1c0/riscv/bin/../sysroot/usr/lib
-lib.o
-main.o
---start-group
--lgcc
--lgcc_eh
--lc
---end-group
-/home/r1c0/riscv/bin/../lib/gcc/riscv64-unknown-linux-gnu/13.2.0/crtend.o
-/home/r1c0/riscv/bin/../lib/gcc/riscv64-unknown-linux-gnu/13.2.0/crtn.o
+getNewImpl<ELFSym>(DataLayOutEnum ChoosedLayout, void * StartAddr, size_t Size) (\home\r1c0\workspace\linker\util\DataLayoutAdapter.h:91)
+getNew<ELFSym, DataLayOutEnum, void*&, unsigned long&>(unsigned long & args, unsigned long & args, unsigned long & args) (\home\r1c0\workspace\linker\util\DataLayoutAdapter.h:116)

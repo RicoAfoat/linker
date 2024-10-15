@@ -44,7 +44,7 @@
 #ifdef GET_Elf_Sym
 24,
 {
-    {"st_name",0x0,4},
+    {"st_name",0,4},
     {"st_info",4,1},
     {"st_other",5,1},
     {"st_shndx",6,2},

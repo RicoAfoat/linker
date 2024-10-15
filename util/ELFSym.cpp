@@ -1,5 +1,5 @@
 #define GET_Elf_Sym
 #include "ELFSym.h"
 
-template ELFSym* getNew<ELFSym,DataLayOutEnum, void*, size_t>(DataLayOutEnum&&, void*&&, size_t&&);
+template ELFSym* getNewImpl<ELFSym>(DataLayOutEnum, void*, size_t);
 

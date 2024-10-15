@@ -1,4 +1,5 @@
 #include "Context.h"
+#include "Singleton.h"
 
 #include <fstream>
 #include <iostream>
@@ -15,7 +16,7 @@ void ArchiveFile::initFileStructure(){
     ArHdr* Strtab=nullptr;
     for(auto Offset=8;Offset<Limi;){
         auto CurAddr=StartAddr+Offset;
-        auto Arhdr=getNew<ArHdr>(CurAddr,Limi-Offset);
+        auto Arhdr=getNewImpl<ArHdr>(CurAddr,Limi-Offset);
         Offset+=Arhdr->getSize()/*ArHdr size*/+Arhdr->getArSectionSize()/*Following Ar Section's Size*/;
         
         switch (Arhdr->getType())
@@ -40,8 +41,9 @@ void ArchiveFile::initFileStructure(){
         auto Name=hdr->getObjfileName(Strtab);
         auto ObjAddr=hdr->getArSectionAddr();
         auto ObjSize=hdr->getArSectionSize();
+        std::cerr<<"Extracting Object File:"<<Name<<"\n";
+        Singleton<Context>().Objs.emplace_back(ObjectFile::OpenWith(Name,(uint8_t*)ObjAddr,ObjSize));
     }
-        // std::cerr<<hdr->getObjfileName(Strtab)<<std::endl;
-
+    
     delete Strtab;
 }
