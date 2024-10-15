@@ -110,3 +110,8 @@ T* getNewImpl(void* StartAddr,size_t Size){
     );
     return Storage;
 }
+
+template<typename T,typename... Args>
+T* getNew(Args&&... args){
+    return getNewImpl<T>(std::forward<Args>(args)...);
+}

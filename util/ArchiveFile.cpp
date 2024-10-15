@@ -16,7 +16,7 @@ void ArchiveFile::initFileStructure(){
     ArHdr* Strtab=nullptr;
     for(auto Offset=8;Offset<Limi;){
         auto CurAddr=StartAddr+Offset;
-        auto Arhdr=getNewImpl<ArHdr>(CurAddr,Limi-Offset);
+        auto Arhdr=getNew<ArHdr>(CurAddr,Limi-Offset);
         Offset+=Arhdr->getSize()/*ArHdr size*/+Arhdr->getArSectionSize()/*Following Ar Section's Size*/;
         
         switch (Arhdr->getType())

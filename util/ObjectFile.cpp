@@ -8,14 +8,14 @@ ELFHeader& ObjectFile::getEhdr(){return *Ehdr;}
 
 void ObjectFile::initFileStructure(){
     const auto [BufferAddr,Limi]=getFileBuffer();
-    Ehdr.reset(getNewImpl<ELFHeader>(DataLayOutEnum::BIT64, BufferAddr, Limi));
+    Ehdr.reset(getNew<ELFHeader>(DataLayOutEnum::BIT64, BufferAddr, Limi));
     
     // Get All Section Headers
     {
         auto Shoff=Ehdr->getShoff();
         uint8_t* ptr=BufferAddr+Shoff;
         auto restSize=Limi-Shoff;
-        Shdrs.emplace_back(getNewImpl<SectionHeader>(DataLayOutEnum::BIT64, ptr,restSize));
+        Shdrs.emplace_back(getNew<SectionHeader>(DataLayOutEnum::BIT64, ptr,restSize));
         
         auto ShdrSize=Shdrs[0]->getSize();
 
@@ -23,7 +23,7 @@ void ObjectFile::initFileStructure(){
         for(auto I=NumSections;I>1;I--){
             ptr+=ShdrSize;
             restSize-=ShdrSize;
-            Shdrs.emplace_back(getNewImpl<SectionHeader>(
+            Shdrs.emplace_back(getNew<SectionHeader>(
                 DataLayOutEnum::BIT64,
                 ptr,
                 restSize
@@ -51,7 +51,7 @@ void ObjectFile::initFileStructure(){
         
         // Init Every Symbol Table Entry
         // First One
-        auto SymEntry=getNewImpl<ELFSym>(DataLayOutEnum::BIT64,std::move(SymAddr),std::move(SymSectionSize));
+        auto SymEntry=getNew<ELFSym>(DataLayOutEnum::BIT64,std::move(SymAddr),std::move(SymSectionSize));
         SymbolTable.emplace_back(SymEntry);
         auto SymEntrySize=SymEntry->getSize();
 
@@ -60,7 +60,7 @@ void ObjectFile::initFileStructure(){
         for(;SymEleSize>1;SymEleSize--){
             SymAddr=(uint8_t*)(SymAddr)+SymEntrySize;
             SymSectionSize-=SymEntrySize;
-            SymbolTable.emplace_back(getNewImpl<ELFSym>(DataLayOutEnum::BIT64,SymAddr,SymSectionSize));
+            SymbolTable.emplace_back(getNew<ELFSym>(DataLayOutEnum::BIT64,SymAddr,SymSectionSize));
         }
 
         {
