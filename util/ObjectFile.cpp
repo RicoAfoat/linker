@@ -23,10 +23,10 @@ void ObjectFile::initFileStructure(){
         for(auto I=NumSections;I>1;I--){
             ptr+=ShdrSize;
             restSize-=ShdrSize;
-            Shdrs.emplace_back(getNew<SectionHeader>(
-                ptr,
-                restSize
-            ));
+            auto Shdr=getNew<SectionHeader>(ptr,restSize);
+            if(Shdr->getShType()==SHT_SYMTAB_SHNDX)
+                SymtabShndx=Shdr;
+            Shdrs.emplace_back();
         }
 
         // init all sections Name
@@ -41,7 +41,10 @@ void ObjectFile::initFileStructure(){
         auto Syms=getShdrs([](SectionHeader* Shdr){
             return Shdr->getShType() == SHT_SYMTAB;
         });
-        assert(Syms.size()==1&&"Currently Lets Assume it to be only one");
+        assert(Syms.size()==1&&"SYMTAB will be only one in an ELF");
+        
+        // find the first global
+        fisrtGlobalIndex=Syms[0]->getShInfo();
         
         auto& SymbolTable=getSymbolTable();
 

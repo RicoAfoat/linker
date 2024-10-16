@@ -15,8 +15,11 @@ class ObjectFile:public FileBuffer<ObjectFile> {
     ArchiveFile* Archive=nullptr;
     
     std::unique_ptr<ELFHeader> Ehdr;
+    SectionHeader* SymtabShndx=nullptr;
     std::vector<std::unique_ptr<SectionHeader>> Shdrs;
     std::vector<std::unique_ptr<ELFSym>> SymbolTable;
+
+    uint32_t fisrtGlobalIndex;
 
 public:
     void initFileStructure() override;
@@ -34,9 +37,8 @@ public:
 
     inline uint32_t getShstrndx(){
         uint32_t Shstrndx=Ehdr->getShstrndx();
-        if(Shstrndx==UINT16_MAX){
+        if(Shstrndx==SHN_XINDEX)
             Shstrndx=Shdrs[0]->getShLink();
-        }
         return Shstrndx;
     }
 
