@@ -1,4 +1,5 @@
 #include "ObjectFile.h"
+#include "Context.h"
 #include <fstream>
 #include <iostream>
 #include <cassert>
@@ -26,7 +27,7 @@ void ObjectFile::initFileStructure(){
             auto Shdr=getNew<SectionHeader>(ptr,restSize);
             if(Shdr->getShType()==SHT_SYMTAB_SHNDX)
                 SymtabShndx=Shdr;
-            Shdrs.emplace_back();
+            Shdrs.emplace_back(Shdr);
         }
 
         // init all sections Name
@@ -89,4 +90,34 @@ std::vector<SectionHeader*> ObjectFile::getShdrs(std::function<bool(SectionHeade
             Result.push_back(ptr);
     }
     return Result;
+}
+
+void ObjectFile::resolveSymbolsInExtractFiles(Context& Ctx){
+    std::cerr<<"---Resolving Symbols In "<<getFileName()<<"---"<<std::endl;
+    auto& ESyms=getSymbolTable();
+    for(uint32_t I=fisrtGlobalIndex,limi=ESyms.size();I<limi;I++){
+        auto& ESym=ESyms[I];
+        auto Name=ESym->getName();
+        auto Shdr=Shdrs[ESym->getShndx(SymtabShndx,I)].get();
+        if(ESym->isUndef()){
+            std::cerr<<"find undef symbol:\t"<<Name<<std::endl;
+            continue;
+        }
+
+        if(ESym->getSymbolBinding()==STB_WEAK){
+            std::cerr<<"find weak symbol:\t"<<Name<<std::endl;
+            continue;
+        }
+
+        std::cerr<<"resolve global symbol:\t"<<Name<<std::endl;
+        auto& SymTable=Ctx.SymbolTable;
+        if(SymTable.find(Name)!=SymTable.end())
+            // The linker will use the first symbol defined in those extract from archive files
+            // demonstrate by experiments 
+            continue;
+        auto& Entry=SymTable[Name];
+        Entry.ESym=ESym.get();
+        Entry.Obj=this;
+        Entry.Shdr=Shdr;
+    }
 }

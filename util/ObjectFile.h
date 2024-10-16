@@ -9,6 +9,7 @@
 #include <memory>
 #include <functional>
 
+class Context;
 
 class ArchiveFile;
 class ObjectFile:public FileBuffer<ObjectFile> {
@@ -61,4 +62,6 @@ public:
 
     inline void setArchiveFile(ArchiveFile* _Ar){Archive=_Ar;}
     inline ArchiveFile* getArchiveFile(){return Archive;}
+
+    void resolveSymbolsInExtractFiles(Context&);
 };

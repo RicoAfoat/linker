@@ -3,6 +3,7 @@
 #include <vector>
 #include "ObjectFile.h"
 #include "ArchiveFile.h"
+#include "LinkerSymbolTable.h"
 
 struct Context{
     std::string OutputFile="a.out";
@@ -11,5 +12,9 @@ struct Context{
     std::vector<std::string> ObjectFiles;
 
     std::vector<std::unique_ptr<ArchiveFile>> Archives;
+    std::vector<std::unique_ptr<ObjectFile>> ExtractObjs;
+
     std::vector<std::unique_ptr<ObjectFile>> Objs;
+    
+    LinkerSymbolTable SymbolTable;
 };

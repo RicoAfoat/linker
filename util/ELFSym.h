@@ -1,14 +1,22 @@
 #pragma once
 #include "DataLayoutAdapter.h"
 #include <elf.h>
+
+class SectionHeader;
 class ELFSym:public SystemStructAdapter,
              public AttributeStringNameOffset<ELFSym,ConstTableEntry::st_name>{
 public:
     ELFSym(void* _StartAddr):SystemStructAdapter(_StartAddr,ConstTableEntry::st_name,ConstTableEntry::EndOfSym){};
 
-    uint16_t getShndx(){
+    inline uint16_t getShndx(){
         return loadComponentAs<uint16_t>(ConstTableEntry::st_shndx);
     }
+
+    inline auto getSTInfo(){
+        return loadComponentAs<uint8_t>(ConstTableEntry::st_info);
+    }
+
+    uint32_t getShndx(SectionHeader*,uint32_t);
 
     inline bool isAbsulute(){
         if(getShndx()==SHN_ABS)return true;
@@ -18,6 +26,10 @@ public:
     inline bool isUndef(){
         if(getShndx()==SHN_UNDEF)return true;
         return false;
+    }
+
+    inline uint8_t getSymbolBinding(){
+        return ELF64_ST_BIND(getSTInfo());
     }
 };
 

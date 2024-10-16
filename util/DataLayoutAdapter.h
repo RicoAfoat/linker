@@ -93,6 +93,10 @@ public:
         assert(NamePtr!=nullptr&&"initAttributeStringNameOffset not called");
         std::printf("%s\n",NamePtr);
     }
+    std::string getName(){
+        assert(NamePtr!=nullptr&&"initAttributeStringNameOffset not called");
+        return std::string(NamePtr);
+    }
     void initAttributeStringNameOffset(void* NameSectionAddr){
         auto derived=dynamic_cast<T*>(this);
         auto NameOffset=derived->getNameOffset();
