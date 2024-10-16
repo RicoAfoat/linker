@@ -47,6 +47,8 @@
         "*.def": "cpp",
         "fstream": "cpp",
         "cassert": "cpp",
-        "deque": "cpp"
+        "deque": "cpp",
+        "cwctype": "cpp",
+        "istream": "cpp"
     }
 }

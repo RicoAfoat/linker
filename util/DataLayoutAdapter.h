@@ -11,8 +11,24 @@ enum class DataLayOutEnum : uint8_t {
     BIT32
 };
 
+struct ConstTable{
+    uint32_t Offset;
+    uint32_t Size;
+};
+
+enum ConstTableEntry{
+#define GET_CONST_TABLE_ENTRY
+#include "../conf/RISCV64.def"
+};
+
+const ConstTable getConstInfo[]{
+#define GET_CONST_TABLE
+#include "../conf/RISCV64.def"
+};
+
 class SystemStructAdapter{
-    std::unordered_map<std::string,std::tuple<void*,uint8_t>> ComponentMap;
+    ConstTableEntry Begin,End;
+    inline void checkEntry(ConstTableEntry Entry){assert(Entry>=Begin&&Entry<=End&&"Entry out of range");}
 protected:
     void* StartAddr;
     size_t Size;
@@ -23,13 +39,17 @@ public:
     inline size_t getSize(){return Size;}
 
     template<typename T>
-    T* getComponent(std::string Name){
-        auto& [Addr,EleSize]=ComponentMap[Name];
+    T* getComponent(ConstTableEntry Entry){
+        checkEntry(Entry);
+        auto& [Offset,EleSize]=getConstInfo[Entry];
+        void* Addr=(uint8_t*)StartAddr+Offset;
         return (T*)Addr;
     }
     template<typename T>
-    T loadComponentAs(std::string Name){
-        auto& [Addr,EleSize]=ComponentMap[Name];
+    T loadComponentAs(ConstTableEntry Entry){
+        checkEntry(Entry);
+        auto& [Offset,EleSize]=getConstInfo[Entry];
+        void* Addr=(uint8_t*)StartAddr+Offset;
         switch (EleSize)
         {
         default:
@@ -50,9 +70,9 @@ public:
         }
     }
 
-    std::string loadRAW(std::string Name);
+    std::string loadRAW(ConstTableEntry);
     
-    SystemStructAdapter(void* _StartAddr, size_t _Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList);
+    SystemStructAdapter(void* _StartAddr, ConstTableEntry _begin, ConstTableEntry _end);
 };
 
 class Attribute{
@@ -60,11 +80,15 @@ public:
     virtual ~Attribute()=default;
 };
 
-template<typename T>
+template<typename T,ConstTableEntry Name>
 class AttributeStringNameOffset:public Attribute{
     char* NamePtr=nullptr;
 public:
     AttributeStringNameOffset()=default;
+    uint32_t getNameOffset(){
+        auto derived=dynamic_cast<T*>(this);
+        return derived->template loadComponentAs<uint32_t>(Name);
+    }
     void dumpName(){
         assert(NamePtr!=nullptr&&"initAttributeStringNameOffset not called");
         std::printf("%s\n",NamePtr);
@@ -77,41 +101,9 @@ public:
     }
 };
 
-template <typename T,const char* Name>
-class AttributeGetNameOffset:public Attribute{
-public:
-    uint32_t getNameOffset(){
-        auto derived=dynamic_cast<T*>(this);
-        return derived->template loadComponentAs<uint32_t>(Name);
-    }
-};
-
 template<typename T>
-T* getNewImpl(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size){
-    T* Storage=nullptr;
-    if(ChoosedLayout==DataLayOutEnum::BIT64){
-        Storage=new T(
-            StartAddr,
-#include "../conf/RISCV64.def"
-        );
-    }
-    else
-        assert(0&&"unimpl");
-    assert(Size>=Storage->getSize()&&"file does not contain enough space");
-    assert(Storage->check()&&"self check failed");
+T* getNew(void* StartAddr,uint32_t RestSize){
+    T* Storage=new T(StartAddr);
+    assert(Storage->getSize()<=RestSize&&"file does not contain enough space");
     return Storage;
-}
-
-template<typename T>
-T* getNewImpl(void* StartAddr,size_t Size){
-    T* Storage=new T(
-        StartAddr,
-#include "../conf/Universal.def"
-    );
-    return Storage;
-}
-
-template<typename T,typename... Args>
-T* getNew(Args&&... args){
-    return getNewImpl<T>(std::forward<Args>(args)...);
 }

@@ -29,16 +29,16 @@ enum class ArEnumtype : uint8_t {
 class ArHdr:public SystemStructAdapter{
     std::string ObjFileName;
 public:
-    ArHdr(void *StartAddr, size_t Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList) : SystemStructAdapter(StartAddr, Size, initList){};
+    ArHdr(void *StartAddr) : SystemStructAdapter(StartAddr, ConstTableEntry::ar_name, ConstTableEntry::EndOfArHdr){};
     inline void* getArSectionAddr(){
         return (uint8_t*)getStartAddr()+getSize();
     }
     inline uint32_t getArSectionSize(){
-        std::string ArSectionSize=trimSpace(loadRAW("Size"));
+        std::string ArSectionSize=trimSpace(loadRAW(ConstTableEntry::ar_size));
         return std::stoul(ArSectionSize,nullptr,10);
     }
     inline ArEnumtype getType(){
-        std::string Name=loadRAW("Name");
+        std::string Name=loadRAW(ConstTableEntry::ar_name);
         if(hasPrefix(Name,"// "))
             return ArEnumtype::AR_STR;
         else if(hasPrefix(Name,"/ ")||hasPrefix(Name,"/SYM64/ "))
@@ -48,7 +48,7 @@ public:
     inline std::string getObjfileName(ArHdr* Strtab){
         assert(getType()==ArEnumtype::AR_OBJ);
         if(!ObjFileName.empty())return ObjFileName;
-        std::string FileName=loadRAW("Name");
+        std::string FileName=loadRAW(ConstTableEntry::ar_name);
         // long file name
         if(hasPrefix(FileName,"/")){
             uint32_t Offset=std::stoul(trimSpace(FileName.substr(1)));
@@ -81,4 +81,4 @@ public:
     }
 };
 
-extern template ArHdr* getNewImpl(void*, size_t);
+extern template ArHdr* getNew(void*,uint32_t);

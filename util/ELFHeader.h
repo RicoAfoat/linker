@@ -4,20 +4,19 @@
 class ELFHeader:public SystemStructAdapter{
 public:
     bool check() override;
-    ELFHeader(void* StartAddr,size_t Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList):SystemStructAdapter(StartAddr,Size,initList){};
+    ELFHeader(void* StartAddr):SystemStructAdapter(StartAddr,ConstTableEntry::e_ident,ConstTableEntry::EndOfELFHeader){};
 
     inline uint64_t getShoff(){
-        return loadComponentAs<uint64_t>("e_shoff");
+        return loadComponentAs<uint64_t>(ConstTableEntry::e_shoff);
     }
 
     inline uint16_t getShnum(){
-        return loadComponentAs<uint16_t>("e_shnum");
+        return loadComponentAs<uint16_t>(ConstTableEntry::e_shnum);
     }
 
     inline uint16_t getShstrndx() {
-        return loadComponentAs<uint16_t>("e_shstrndx");
+        return loadComponentAs<uint16_t>(ConstTableEntry::e_shstrndx);
     }
 };
 
-extern template ELFHeader* getNewImpl(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size);
-
+extern template ELFHeader* getNew(void*,uint32_t);

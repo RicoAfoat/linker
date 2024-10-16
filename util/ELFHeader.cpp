@@ -1,13 +1,12 @@
-#define GET_ELFHeaderLayOut
 #include "ELFHeader.h"
 #include <cassert>
 
-template ELFHeader* getNewImpl<ELFHeader>(DataLayOutEnum, void*, size_t);
+template ELFHeader* getNew(void*,uint32_t);
 
 bool ELFHeader::check(){
     auto EhdrSize=getSize();
     if(EhdrSize>Size)return false;
-    auto e_ident=getComponent<uint8_t>("e_ident");
+    auto e_ident=getComponent<uint8_t>(ConstTableEntry::e_ident);
     auto hasMagic=(
         e_ident[0]==0x7F&&
         e_ident[1]==0x45&&

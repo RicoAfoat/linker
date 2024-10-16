@@ -1,12 +1,9 @@
 #pragma once
 #include "DataLayoutAdapter.h"
-
-static constexpr const char ST_NAME[] = "st_name";
 class ELFSym:public SystemStructAdapter,
-             public AttributeGetNameOffset<ELFSym,ST_NAME>,
-             public AttributeStringNameOffset<ELFSym>{
+             public AttributeStringNameOffset<ELFSym,ConstTableEntry::st_name>{
 public:
-    ELFSym(void* _StartAddr, size_t _Size,std::initializer_list<std::tuple<std::string, size_t, uint8_t>> initList):SystemStructAdapter(_StartAddr,_Size,initList){};
+    ELFSym(void* _StartAddr):SystemStructAdapter(_StartAddr,ConstTableEntry::st_name,ConstTableEntry::EndOfSym){};
 };
 
-extern template ELFSym* getNewImpl(DataLayOutEnum ChoosedLayout,void* StartAddr,size_t Size);
+extern template ELFSym* getNew(void*,uint32_t);

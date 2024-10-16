@@ -8,14 +8,14 @@ ELFHeader& ObjectFile::getEhdr(){return *Ehdr;}
 
 void ObjectFile::initFileStructure(){
     const auto [BufferAddr,Limi]=getFileBuffer();
-    Ehdr.reset(getNew<ELFHeader>(DataLayOutEnum::BIT64, BufferAddr, Limi));
+    Ehdr.reset(getNew<ELFHeader>(BufferAddr, Limi));
     
     // Get All Section Headers
     {
         auto Shoff=Ehdr->getShoff();
         uint8_t* ptr=BufferAddr+Shoff;
         auto restSize=Limi-Shoff;
-        Shdrs.emplace_back(getNew<SectionHeader>(DataLayOutEnum::BIT64, ptr,restSize));
+        Shdrs.emplace_back(getNew<SectionHeader>(ptr,restSize));
         
         auto ShdrSize=Shdrs[0]->getSize();
 
@@ -24,7 +24,6 @@ void ObjectFile::initFileStructure(){
             ptr+=ShdrSize;
             restSize-=ShdrSize;
             Shdrs.emplace_back(getNew<SectionHeader>(
-                DataLayOutEnum::BIT64,
                 ptr,
                 restSize
             ));
@@ -40,7 +39,7 @@ void ObjectFile::initFileStructure(){
     {
         // Get Symbol Table initialized
         auto Syms=getShdrs([](SectionHeader* Shdr){
-            return Shdr->getShType() == static_cast<uint32_t>(SH_Type_Enum::SHT_SYMTAB);
+            return Shdr->getShType() == SHT_SYMTAB;
         });
         assert(Syms.size()==1&&"Currently Lets Assume it to be only one");
         
@@ -51,7 +50,7 @@ void ObjectFile::initFileStructure(){
         
         // Init Every Symbol Table Entry
         // First One
-        auto SymEntry=getNew<ELFSym>(DataLayOutEnum::BIT64,std::move(SymAddr),std::move(SymSectionSize));
+        auto SymEntry=getNew<ELFSym>(SymAddr,SymSectionSize);
         SymbolTable.emplace_back(SymEntry);
         auto SymEntrySize=SymEntry->getSize();
 
@@ -60,14 +59,14 @@ void ObjectFile::initFileStructure(){
         for(;SymEleSize>1;SymEleSize--){
             SymAddr=(uint8_t*)(SymAddr)+SymEntrySize;
             SymSectionSize-=SymEntrySize;
-            SymbolTable.emplace_back(getNew<ELFSym>(DataLayOutEnum::BIT64,SymAddr,SymSectionSize));
+            SymbolTable.emplace_back(getNew<ELFSym>(SymAddr,SymSectionSize));
         }
 
         {
             // Get .symtab corresponding .strtab 
             // std::cerr<<Syms[0]->getShLink()<<std::endl;
             auto& StrTab=getShdrs()[Syms[0]->getShLink()];
-            assert(StrTab->getShType()==static_cast<uint32_t>(SH_Type_Enum::SHT_STRTAB));
+            assert(StrTab->getShType()==SHT_STRTAB);
             
             // init all sections Name
             auto NameSectionAddr=getSectionAddr(StrTab.get());
