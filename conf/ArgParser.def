@@ -50,6 +50,13 @@ new ExpectedFlag(
     }
 ),
 
+/*no-relax*/
+new ExpectedFlag(
+    "no-relax",[](char*){
+        return MatchSuccess;
+    }
+),
+
 /*End Ignore*/
 
 /*Parse -o and -output*/

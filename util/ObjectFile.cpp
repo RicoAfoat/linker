@@ -134,7 +134,7 @@ void ObjectFile::resolveSymbols(Context& Ctx){
         if(ESym->isUndef()&&ESym->getSymbolBinding()!=STB_WEAK){
             // Add to undef set
             std::cerr<<"Find undef symbol "<<ESym->getName()<<", add to undef set\n";
-            Ctx.UndefSymbols.push_back(Name);
+            Ctx.UndefSymbols.push(Name);
         }
         if(!ESym->isUndef()){
             // which has definition

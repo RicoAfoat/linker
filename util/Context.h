@@ -19,5 +19,5 @@ struct Context{
     LinkerSymbolTable ArchiveSymbolTable;
     LinkerSymbolTable FinalSymbolTable;
 
-    std::vector<std::string> UndefSymbols;
+    std::queue<std::string> UndefSymbols;
 };
