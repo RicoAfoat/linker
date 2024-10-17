@@ -11,10 +11,10 @@ void PASSES::resolveSymbols(Context& Ctx){
             return Ctx.FinalSymbolTable[Name];
         if(Ctx.ArchiveSymbolTable.find(Name)!=Ctx.ArchiveSymbolTable.end())
             return Ctx.ArchiveSymbolTable[Name];
-        std::cerr<<"Undefined Reference:"<<Name<<std::endl;
-        exit(-1);
+        std::cerr<<"\33[31mUndefined Reference:"<<Name<<"\33[0m"<<std::endl;
+        // exit(-1);
         /* 有些符号定义在 linker script 里，炸掉是技术性调整 */
-        // return SymbolEntry{nullptr,nullptr,nullptr};
+        return SymbolEntry{nullptr,nullptr,nullptr};
     };
     
     for(auto& Obj:Ctx.Objs)
@@ -24,10 +24,12 @@ void PASSES::resolveSymbols(Context& Ctx){
         auto UndefRef=Ctx.UndefSymbols.front();
         Ctx.UndefSymbols.pop();
         auto SymDef=getSymbolDefinition(UndefRef);
-        // if(SymDef.ESym==nullptr&&SymDef.Obj==nullptr&&SymDef.Shdr==nullptr)continue;
+        if(SymDef.ESym==nullptr&&SymDef.Obj==nullptr&&SymDef.Shdr==nullptr)continue;
         std::cerr<<"Find reference "<<UndefRef<<std::endl;
-        if(SymDef.Obj->getLiveness()==false)
+        if(SymDef.Obj->getLiveness()==false){
+            SymDef.Obj->getLiveness()=true;
             SymDef.Obj->resolveSymbols(Ctx);
+        }
     }
 }
 

@@ -104,10 +104,11 @@ void ObjectFile::resolveSymbolsInExtractFiles(Context& Ctx){
             continue;
         }
 
-        if(ESym->getSymbolBinding()==STB_WEAK){
-            std::cerr<<"find weak symbol:\t"<<Name<<std::endl;
-            continue;
-        }
+        // if outside is defined strong, then weak symbol will be used
+        // if(ESym->getSymbolBinding()==STB_WEAK){
+        //     std::cerr<<"find weak symbol:\t"<<Name<<std::endl;
+        //     continue;
+        // }
 
         std::cerr<<"Register Global Symbol:\t"<<Name<<std::endl;
         auto& SymTable=Ctx.ArchiveSymbolTable;
