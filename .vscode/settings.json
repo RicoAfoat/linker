@@ -49,6 +49,7 @@
         "cassert": "cpp",
         "deque": "cpp",
         "cwctype": "cpp",
-        "istream": "cpp"
+        "istream": "cpp",
+        "queue": "cpp"
     }
 }

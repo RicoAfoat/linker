@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <queue>
 
 class Context;
 
@@ -22,7 +23,9 @@ class ObjectFile:public FileBuffer<ObjectFile> {
 
     uint32_t fisrtGlobalIndex;
 
+    bool isAlive=false;
 public:
+    inline bool& getLiveness(){return isAlive;}
     void initFileStructure() override;
 
     ObjectFile()=default;
@@ -64,4 +67,8 @@ public:
     inline ArchiveFile* getArchiveFile(){return Archive;}
 
     void resolveSymbolsInExtractFiles(Context&);
+
+    void registerDefinedSymbols(Context&);
+
+    void resolveSymbols(Context&);
 };

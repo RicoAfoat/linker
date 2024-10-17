@@ -93,7 +93,7 @@ std::vector<SectionHeader*> ObjectFile::getShdrs(std::function<bool(SectionHeade
 }
 
 void ObjectFile::resolveSymbolsInExtractFiles(Context& Ctx){
-    std::cerr<<"---Resolving Symbols In "<<getFileName()<<"---"<<std::endl;
+    std::cerr<<"---Extract Symbols In "<<getFileName()<<"---"<<std::endl;
     auto& ESyms=getSymbolTable();
     for(uint32_t I=fisrtGlobalIndex,limi=ESyms.size();I<limi;I++){
         auto& ESym=ESyms[I];
@@ -109,8 +109,8 @@ void ObjectFile::resolveSymbolsInExtractFiles(Context& Ctx){
             continue;
         }
 
-        std::cerr<<"resolve global symbol:\t"<<Name<<std::endl;
-        auto& SymTable=Ctx.SymbolTable;
+        std::cerr<<"Register Global Symbol:\t"<<Name<<std::endl;
+        auto& SymTable=Ctx.ArchiveSymbolTable;
         if(SymTable.find(Name)!=SymTable.end())
             // The linker will use the first symbol defined in those extract from archive files
             // demonstrate by experiments 
@@ -119,5 +119,41 @@ void ObjectFile::resolveSymbolsInExtractFiles(Context& Ctx){
         Entry.ESym=ESym.get();
         Entry.Obj=this;
         Entry.Shdr=Shdr;
+    }
+}
+
+void ObjectFile::resolveSymbols(Context& Ctx){
+    std::cerr<<"---Resolve Symbols In "<<getFileName()<<"---"<<std::endl;
+    
+    auto& ESyms=getSymbolTable();
+    for(uint32_t I=fisrtGlobalIndex,limi=ESyms.size();I<limi;I++){
+        auto& ESym=ESyms[I];
+        auto Name=ESym->getName();
+        auto Shdr=Shdrs[ESym->getShndx(SymtabShndx,I)].get();
+
+        if(ESym->isUndef()&&ESym->getSymbolBinding()!=STB_WEAK){
+            // Add to undef set
+            std::cerr<<"Find undef symbol "<<ESym->getName()<<", add to undef set\n";
+            Ctx.UndefSymbols.push_back(Name);
+        }
+        if(!ESym->isUndef()){
+            // which has definition
+            std::cerr<<"Find definition of symbol:"<<ESym->getName()<<", add to final set\n";
+            auto& SymTable=Ctx.FinalSymbolTable;
+            if(SymTable.find(Name)!=SymTable.end()){
+                bool previousStrong=SymTable[Name].ESym->getSymbolBinding()==STB_GLOBAL;
+                bool thisStrong=ESym->getSymbolBinding()==STB_GLOBAL;
+                // strong and strong, fucked
+                if(previousStrong&&thisStrong){
+                    std::cerr<<"Redefiniton of symbol:"<<Name<<", previous defined in "<<SymTable[Name].Obj->getFileName();
+                    exit(-1);
+                }
+                // weak and weak, continue
+                continue;
+                // weak and strong, legal
+            }
+            SymTable[Name]={this,Shdr,ESym.get()};
+        }
+        // undef and weak
     }
 }

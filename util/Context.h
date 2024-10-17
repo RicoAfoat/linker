@@ -16,5 +16,8 @@ struct Context{
 
     std::vector<std::unique_ptr<ObjectFile>> Objs;
     
-    LinkerSymbolTable SymbolTable;
+    LinkerSymbolTable ArchiveSymbolTable;
+    LinkerSymbolTable FinalSymbolTable;
+
+    std::vector<std::string> UndefSymbols;
 };

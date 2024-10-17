@@ -25,6 +25,7 @@ void ArchiveFile::initFileStructure(){
             Strtab=Arhdr;
             break;
         case ArEnumtype::AR_SYM:
+            /* 后面可以用这个来加速解析，只考虑功能性是非必要的 */
             delete Arhdr;
             break;
         case ArEnumtype::AR_OBJ:
