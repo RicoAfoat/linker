@@ -1,2 +1,0 @@
-getNewImpl<ELFSym>(DataLayOutEnum ChoosedLayout, void * StartAddr, size_t Size) (\home\r1c0\workspace\linker\util\DataLayoutAdapter.h:91)
-getNew<ELFSym, DataLayOutEnum, void*&, unsigned long&>(unsigned long & args, unsigned long & args, unsigned long & args) (\home\r1c0\workspace\linker\util\DataLayoutAdapter.h:116)
