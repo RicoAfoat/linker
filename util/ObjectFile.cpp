@@ -42,6 +42,10 @@ void ObjectFile::initFileStructure(){
         auto Syms=getShdrs([](SectionHeader* Shdr){
             return Shdr->getShType() == SHT_SYMTAB;
         });
+
+        if(Syms.size()==0)
+            return;
+
         assert(Syms.size()==1&&"SYMTAB will be only one in an ELF");
         
         // find the first global
@@ -132,29 +136,27 @@ void ObjectFile::resolveSymbols(Context& Ctx){
         auto Name=ESym->getName();
         auto Shdr=Shdrs[ESym->getShndx(SymtabShndx,I)].get();
 
-        if(ESym->isUndef()&&ESym->getSymbolBinding()!=STB_WEAK){
+        if(ESym->isUndef()){
             // Add to undef set
             std::cerr<<"Find undef symbol "<<ESym->getName()<<", add to undef set\n";
             Ctx.UndefSymbols.push(Name);
+            continue;
         }
-        if(!ESym->isUndef()){
-            // which has definition
-            std::cerr<<"Find definition of symbol:"<<ESym->getName()<<", add to final set\n";
-            auto& SymTable=Ctx.FinalSymbolTable;
-            if(SymTable.find(Name)!=SymTable.end()){
-                bool previousStrong=SymTable[Name].ESym->getSymbolBinding()==STB_GLOBAL;
-                bool thisStrong=ESym->getSymbolBinding()==STB_GLOBAL;
-                // strong and strong, fucked
-                if(previousStrong&&thisStrong){
-                    std::cerr<<"Redefiniton of symbol:"<<Name<<", previous defined in "<<SymTable[Name].Obj->getFileName();
-                    exit(-1);
-                }
-                // weak and weak, continue
-                continue;
-                // weak and strong, legal
+        // which has definition
+        std::cerr<<"Find definition of symbol:"<<ESym->getName()<<", add to final set\n";
+        auto& SymTable=Ctx.FinalSymbolTable;
+        if(SymTable.find(Name)!=SymTable.end()){
+            bool previousStrong=SymTable[Name].ESym->getSymbolBinding()==STB_GLOBAL;
+            bool thisStrong=ESym->getSymbolBinding()==STB_GLOBAL;
+            // strong and strong, fucked
+            if(previousStrong&&thisStrong){
+                std::cerr<<"Redefiniton of symbol:"<<Name<<", previous defined in "<<SymTable[Name].Obj->getFileName();
+                exit(-1);
             }
-            SymTable[Name]={this,Shdr,ESym.get()};
+            // weak and weak, continue
+            if(!previousStrong&&!thisStrong)continue;
+            // weak and strong, legal
         }
-        // undef and weak
+        SymTable[Name]={this,Shdr,ESym.get()};
     }
 }

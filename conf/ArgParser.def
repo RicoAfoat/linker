@@ -15,6 +15,12 @@ new ExpectedWithPrefix(
     }
 ),
 
+new ExpectedWithPrefix(
+    "hash-style",[](char* PluginOpt){
+        return MatchSuccess;
+    }
+),
+
 /*sysroot*/
 new ExpectedWithPrefix(
     "sysroot",[](char* Sysroot){
@@ -56,6 +62,20 @@ new ExpectedFlag(
         return MatchSuccess;
     }
 ),
+
+/* build-id */
+new ExpectedFlag(
+    "build-id",[](char*){
+        return MatchSuccess;
+    }
+),
+
+// new ExpectedWithFollow(
+//     "z",[](char* OutputFile){
+//         // Singleton<Context>().OutputFile=OutputFile;
+//         return MatchSuccess;
+//     }
+// ),
 
 /*End Ignore*/
 

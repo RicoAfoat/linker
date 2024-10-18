@@ -50,6 +50,11 @@
         "deque": "cpp",
         "cwctype": "cpp",
         "istream": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "cstdarg": "cpp",
+        "ctime": "cpp",
+        "map": "cpp",
+        "ranges": "cpp",
+        "sstream": "cpp"
     }
 }

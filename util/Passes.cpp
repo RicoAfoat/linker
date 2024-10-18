@@ -31,6 +31,22 @@ void PASSES::resolveSymbols(Context& Ctx){
             SymDef.Obj->resolveSymbols(Ctx);
         }
     }
+
+    uint32_t CntLive=0;
+    
+    for(auto& Obj:Ctx.Objs){
+        assert(Obj->getLiveness()&&"Object file not live");
+        std::cerr<<"!!!Find live file!!!:"<<Obj->getFileName()<<std::endl;
+        CntLive++;
+    }
+
+    for(auto& Obj:Ctx.ExtractObjs){
+        if(Obj->getLiveness()){
+            std::cerr<<"!!!Find live file!!!:"<<Obj->getFileName()<<std::endl;
+            CntLive++;
+        }
+    }
+    std::cerr<<"Total live files:"<<CntLive<<std::endl;
 }
 
 void PASSES::run(Context& Ctx){
