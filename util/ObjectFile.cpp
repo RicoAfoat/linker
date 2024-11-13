@@ -16,30 +16,30 @@ void ObjectFile::initFileStructure(){
         auto Shoff=Ehdr->getShoff();
         uint8_t* ptr=BufferAddr+Shoff;
         auto restSize=Limi-Shoff;
-        Shdrs.emplace_back(getNew<SectionHeader>(ptr,restSize));
+        Sections.emplace_back(new Section(this,ptr));
         
-        auto ShdrSize=Shdrs[0]->getSize();
+        auto ShdrSize=Sections[0]->getSize();
 
         auto NumSections=getNumSection();
         for(auto I=NumSections;I>1;I--){
             ptr+=ShdrSize;
             restSize-=ShdrSize;
-            auto Shdr=getNew<SectionHeader>(ptr,restSize);
+            auto Shdr=new Section(this,ptr);
             if(Shdr->getShType()==SHT_SYMTAB_SHNDX)
                 SymtabShndx=Shdr;
-            Shdrs.emplace_back(Shdr);
+            Sections.emplace_back(Shdr);
         }
 
         // init all sections Name
-        assert(Shdrs[getShstrndx()]->getShType()==0x3);
+        assert(Sections[getShstrndx()]->getShType()==0x3);
         auto NameSectionAddr=getSectionAddr(getShstrndx());
         for(auto I=0;I<NumSections;I++)
-            Shdrs[I]->initAttributeStringNameOffset(NameSectionAddr);
+            Sections[I]->initAttributeStringNameOffset(NameSectionAddr);
     }
 
     {
         // Get Symbol Table initialized
-        auto Syms=getShdrs([](SectionHeader* Shdr){
+        auto Syms=getSections([](Section* Shdr){
             return Shdr->getShType() == SHT_SYMTAB;
         });
 
@@ -53,9 +53,8 @@ void ObjectFile::initFileStructure(){
         
         auto& SymbolTable=getSymbolTable();
 
-        auto SymAddr=getSectionAddr(Syms[0]);
-        auto SymSectionSize=Syms[0]->getShSize();
-        
+        auto [SymAddr,SymSectionSize]=Syms[0]->getContent();
+
         // Init Every Symbol Table Entry
         // First One
         auto SymEntry=getNew<ELFSym>(SymAddr,SymSectionSize);
@@ -73,7 +72,7 @@ void ObjectFile::initFileStructure(){
         {
             // Get .symtab corresponding .strtab 
             // std::cerr<<Syms[0]->getShLink()<<std::endl;
-            auto& StrTab=getShdrs()[Syms[0]->getShLink()];
+            auto& StrTab=getSections()[Syms[0]->getShLink()];
             assert(StrTab->getShType()==SHT_STRTAB);
             
             // init all sections Name
@@ -85,11 +84,11 @@ void ObjectFile::initFileStructure(){
     }
 }
 
-std::vector<SectionHeader*> ObjectFile::getShdrs(std::function<bool(SectionHeader*)> Condition){
-    std::vector<SectionHeader*> Result;
+std::vector<Section*> ObjectFile::getSections(std::function<bool(Section*)> Condition){
+    std::vector<Section*> Result;
     auto numShdrs=getNumSection();
     for(auto I=0;I<numShdrs;I++){
-        auto ptr=Shdrs[I].get();
+        auto ptr=Sections[I].get();
         if(Condition(ptr))
             Result.push_back(ptr);
     }
@@ -102,7 +101,7 @@ void ObjectFile::resolveSymbolsInExtractFiles(Context& Ctx){
     for(uint32_t I=fisrtGlobalIndex,limi=ESyms.size();I<limi;I++){
         auto& ESym=ESyms[I];
         auto Name=ESym->getName();
-        auto Shdr=Shdrs[ESym->getShndx(SymtabShndx,I)].get();
+        auto Shdr=Sections[ESym->getShndx(SymtabShndx,I)].get();
         if(ESym->isUndef()){
             std::cerr<<"find undef symbol:\t"<<Name<<std::endl;
             continue;
@@ -134,7 +133,7 @@ void ObjectFile::resolveSymbols(Context& Ctx){
     for(uint32_t I=fisrtGlobalIndex,limi=ESyms.size();I<limi;I++){
         auto& ESym=ESyms[I];
         auto Name=ESym->getName();
-        auto Shdr=Shdrs[ESym->getShndx(SymtabShndx,I)].get();
+        auto Shdr=Sections[ESym->getShndx(SymtabShndx,I)].get();
 
         if(ESym->isUndef()){
             // Add to undef set

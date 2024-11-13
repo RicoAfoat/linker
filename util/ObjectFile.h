@@ -1,6 +1,7 @@
 #pragma once
 #include "ELFHeader.h"
-#include "SectionHeader.h"
+// #include "SectionHeader.h"
+#include "Section.h"
 #include "ELFSym.h"
 #include "FileBuffer.h"
 
@@ -12,13 +13,15 @@
 
 class Context;
 
+class Section;
+
 class ArchiveFile;
 class ObjectFile:public FileBuffer<ObjectFile> {
     ArchiveFile* Archive=nullptr;
     
     std::unique_ptr<ELFHeader> Ehdr;
     SectionHeader* SymtabShndx=nullptr;
-    std::vector<std::unique_ptr<SectionHeader>> Shdrs;
+    std::vector<std::unique_ptr<Section>> Sections;
     std::vector<std::unique_ptr<ELFSym>> SymbolTable;
 
     uint32_t fisrtGlobalIndex;
@@ -35,31 +38,31 @@ public:
         uint64_t Shnum = Ehdr->getShnum();
         if(Shnum!=0)return Shnum;
         else{
-            return Shdrs[0]->getShSize();
+            return Sections[0]->getShSize();
         }
     }
 
     inline uint32_t getShstrndx(){
         uint32_t Shstrndx=Ehdr->getShstrndx();
         if(Shstrndx==SHN_XINDEX)
-            Shstrndx=Shdrs[0]->getShLink();
+            Shstrndx=Sections[0]->getShLink();
         return Shstrndx;
     }
 
     inline void* getSectionAddr(uint32_t Idx){
-        assert(Shdrs.size()>Idx);
-        return FileRef.first+Shdrs[Idx]->getSectionOffset();
+        assert(Sections.size()>Idx);
+        return FileRef.first+Sections[Idx]->getSectionOffset();
     }
 
     inline void* getSectionAddr(SectionHeader* Shdr){
         return FileRef.first+Shdr->getSectionOffset();
     }
 
-    inline std::vector<std::unique_ptr<SectionHeader>>& getShdrs(){
-        return Shdrs;
+    inline std::vector<std::unique_ptr<Section>>& getSections(){
+        return Sections;
     }
 
-    std::vector<SectionHeader*> getShdrs(std::function<bool(SectionHeader*)>);
+    std::vector<Section*> getSections(std::function<bool(Section*)>);
 
     inline std::vector<std::unique_ptr<ELFSym>>& getSymbolTable(){return SymbolTable;}
 
