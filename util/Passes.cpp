@@ -49,6 +49,13 @@ void PASSES::resolveSymbols(Context& Ctx){
     std::cerr<<"Total live files:"<<CntLive<<std::endl;
 }
 
+void PASSES::registerSectionPieces(Context& Ctx){
+    for(auto& Obj:Ctx.Objs)
+        Obj->registerSectionPieces(Ctx);
+    for(auto& Obj:Ctx.ExtractObjs)
+        Obj->registerSectionPieces(Ctx);
+}
+
 void PASSES::run(Context& Ctx){
     for(auto& Obj:Ctx.ObjectFiles){
         std::cerr<<"Read direct object file:"<<Obj<<std::endl;
@@ -59,8 +66,5 @@ void PASSES::run(Context& Ctx){
     }
     
     resolveSymbols(Ctx);
-    // initialize liveness
-    // for(auto& Obj:Ctx.Objs)
-    //     if(Obj->getArchiveFile()==nullptr)
-    //         std::cerr<<"!!!Find live file!!!:"<<Obj->getFileName()<<std::endl;
+    registerSectionPieces(Ctx);
 }

@@ -21,7 +21,11 @@ class ObjectFile:public FileBuffer<ObjectFile> {
     
     std::unique_ptr<ELFHeader> Ehdr;
     SectionHeader* SymtabShndx=nullptr;
+
     std::vector<std::unique_ptr<Section>> Sections;
+    
+    std::vector<MergeableSection> MergeableSections;
+
     std::vector<std::unique_ptr<ELFSym>> SymbolTable;
 
     uint32_t fisrtGlobalIndex;
@@ -29,7 +33,10 @@ class ObjectFile:public FileBuffer<ObjectFile> {
     bool isAlive=false;
 public:
     inline bool& getLiveness(){return isAlive;}
+    
     void initFileStructure() override;
+
+    void initializeMergeableSections(Context&);
 
     ObjectFile()=default;
     ELFHeader& getEhdr();
@@ -74,4 +81,6 @@ public:
     void registerDefinedSymbols(Context&);
 
     void resolveSymbols(Context&);
+
+    void registerSectionPieces(Context&);
 };

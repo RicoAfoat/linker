@@ -23,6 +23,12 @@ public:
 
   inline uint32_t getShType() { return loadComponentAs<uint32_t>(ConstTableEntry::sh_type); }
 
+  inline uint64_t getShFlags() { return loadComponentAs<uint64_t>(ConstTableEntry::sh_flags); }
+
+  inline uint64_t getShEntSize() { return loadComponentAs<uint64_t>(ConstTableEntry::sh_entsize);}
+
+  inline uint64_t getShAlign() { return loadComponentAs<uint64_t>(ConstTableEntry::sh_addralign); }
+
   inline uint64_t getSectionOffset() {
     return loadComponentAs<uint64_t>(ConstTableEntry::sh_offset);
   }

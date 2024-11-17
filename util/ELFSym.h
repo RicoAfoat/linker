@@ -28,8 +28,17 @@ public:
         return false;
     }
 
+    inline bool isCommon(){
+        if(getShndx()==SHN_COMMON)return true;
+        return false;
+    }
+
     inline uint8_t getSymbolBinding(){
         return ELF64_ST_BIND(getSTInfo());
+    }
+
+    inline uint64_t getValue(){
+        return loadComponentAs<uint64_t>(ConstTableEntry::st_value);
     }
 };
 

@@ -1,4 +1,5 @@
 #include "ObjectFile.h"
+#include "Singleton.h"
 #include "Context.h"
 #include <fstream>
 #include <iostream>
@@ -82,6 +83,9 @@ void ObjectFile::initFileStructure(){
                 SymbolTable[I]->initAttributeStringNameOffset(NameSectionAddr);
         }
     }
+
+
+    initializeMergeableSections(Singleton<Context>());
 }
 
 std::vector<Section*> ObjectFile::getSections(std::function<bool(Section*)> Condition){
@@ -157,5 +161,30 @@ void ObjectFile::resolveSymbols(Context& Ctx){
             // weak and strong, legal
         }
         SymTable[Name]={this,Shdr,ESym.get()};
+    }
+}
+
+void ObjectFile::registerSectionPieces(Context& Ctx){
+    // 已经处理好当前文件的 MergeableSections，将 Symbol 与这些关联起来
+    for(int i=0,limi=SymbolTable.size();i<limi;i++){
+        auto& sym=SymbolTable[i];
+        if(sym->isAbsulute()||sym->isUndef()||sym->isCommon())continue;
+        auto Mergeable=MergeableSections[sym->getShndx(SymtabShndx,i)];
+        if(Mergeable.Parent==nullptr)continue;
+        auto [Fragment,Offset]=Mergeable.getFragment(sym->getValue());
+        
+    }
+}
+
+void ObjectFile::initializeMergeableSections(Context& Ctx){
+    MergeableSections.reserve(Sections.size());
+
+    for(int i=0,limi=Sections.size();i<limi;i++){
+        if(Sections[i]->isAlive&&Sections[i]->getShFlags()&SHF_MERGE){
+            MergeableSections[i].Parent=Ctx.getMergedSection(Sections[i]->getName(),Sections[i]->getShType(),Sections[i]->getShFlags());
+            Sections[i]->splitSection(MergeableSections[i]);
+            // Already merged.
+            Sections[i]->isAlive=false;
+        }
     }
 }
