@@ -4,6 +4,8 @@
 #include "Symbol.h"
 #include "Context.h"
 #include "Singleton.h"
+#include "mergeablesection.h"
+#include "SectionFragment.h"
 #include <queue>
 #include <cassert>
 
@@ -40,4 +42,10 @@ void Passes::markLiveObjects(){
             que.push(_obj);
         });
     }
+}
+
+void Passes::registerSectionPieces(){
+    auto& Ctx=Singleton<Context>();
+    for(auto& obj:Ctx.Objs)
+        obj->registerSectionPieces();
 }

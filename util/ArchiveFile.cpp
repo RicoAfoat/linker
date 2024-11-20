@@ -3,6 +3,9 @@
 #include "ArchiveFile.h"
 #include "InputSection.h"
 #include "Symbol.h"
+#include "SectionFragment.h"
+#include "mergedsection.h"
+#include "mergeablesection.h"
 
 #include <fstream>
 #include <iostream>

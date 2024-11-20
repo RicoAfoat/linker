@@ -6,6 +6,10 @@
 #include "ObjectFile.h"
 #include "InputSection.h"
 #include "Symbol.h"
+#include "mergeablesection.h"
+#include "mergedsection.h"
+#include "Output.h"
+#include "Stringlib.h"
 
 void ObjectFile::initFileStructure(){
     InputFile::initFileStructure();
@@ -17,6 +21,7 @@ void ObjectFile::initFileStructure(){
     }
     initSections();
     initSymbols();
+    initMergeableSections();
 }
 
 void ObjectFile::initSections(){
@@ -65,7 +70,7 @@ void ObjectFile::initSymbols(){
         sym.SymIdx=i;
 
         if(!IsAbs(esym))
-            sym.InputSec=Sections[getShndx(esym,i)].get();
+            sym.setInputSection(Sections[getShndx(esym,i)].get());
     }
 
     for(int i=0;i<FirstGlobal;i++)
@@ -103,8 +108,7 @@ void ObjectFile::resolveSymbols(){
 
         if(sym->File!=nullptr)continue;
         sym->File=this;
-        auto shndx=getShndx(esym,i);
-        sym->InputSec=Sections[shndx].get();
+        sym->setInputSection(isec);
         sym->Value=esym->st_value;
         sym->SymIdx=i;
     }
@@ -136,5 +140,89 @@ void ObjectFile::clearSymbols(){
         auto sym=Symbols[i];
         if(sym->File==this)
             sym->clear();
+    }
+}
+
+void ObjectFile::initMergeableSections(){
+    MAbleSections=std::vector<std::unique_ptr<MergeableSection>>(Sections.size());
+
+    for(int i=0,limi=Sections.size();i<limi;i++){
+        auto isec=Sections[i].get();
+        if(isec!=nullptr && isec->isAlive && isec->getShdr()->sh_flags&SHF_MERGE!=0){
+            MAbleSections[i].reset(splitSection(isec));
+            isec->isAlive=false;
+        }
+    }
+}
+
+static size_t findNull(uint8_t* ptr,size_t entsize,size_t Limit){
+    for(auto i=0;i<=Limit-entsize;i+=entsize){
+        if(AllZero((char*)ptr+i,entsize))
+            return i;
+    }
+    assert(0&&"unreachable");
+}
+
+MergeableSection* ObjectFile::splitSection(InputSection* isec){
+    auto [Content,Size]=isec->Content;
+    auto shdr=isec->getShdr();
+
+    auto MAS=new MergeableSection();
+    MAS->Parent=MergedSection::getMergedSection(
+        std::string(isec->getName()),
+        shdr->sh_type,
+        shdr->sh_flags
+    );
+    MAS->P2Align=isec->P2Align;
+
+    if(shdr->sh_flags&SHF_STRINGS){
+        for(auto offset=0;offset<Size;){
+            auto end=findNull(Content+offset,shdr->sh_entsize,Size-offset);
+            
+            auto view=std::string_view((char*)Content+offset,end);
+            MAS->Strs.push_back(view);
+            MAS->FragOffsets.push_back(offset);
+
+            offset+=end;
+        }
+    }
+    else{
+        assert(Size%shdr->sh_entsize==0);
+        for(auto offset=0;offset<Size;offset+=shdr->sh_entsize){
+            auto view=std::string_view((char*)Content+offset,shdr->sh_entsize);
+            MAS->Strs.push_back(view);
+            MAS->FragOffsets.push_back(offset);
+        }
+    }
+
+    return MAS;
+}
+
+void ObjectFile::registerSectionPieces(){
+    for(auto& masec:MAbleSections){
+        if(masec==nullptr)
+            continue;
+        
+        masec->Fragments=std::vector<SectionFragment*>(masec->Strs.size(),nullptr);
+        for(auto& Str:masec->Strs){
+            auto frag=masec->Parent->Insert(Str,masec->P2Align);
+            masec->Fragments.push_back(frag);
+        }
+    }
+
+    for(decltype(ElfSyms.size()) i=1,limi=ElfSyms.size();i<limi;i++){
+        auto sym=Symbols[i];
+        auto esym=ElfSyms[i];
+        if(IsAbs(esym)||IsUndef(esym)||IsCommon(esym))
+            continue;
+        
+        auto masec=MAbleSections[getShndx(esym,i)].get();
+        if(masec==nullptr)
+            continue;
+
+        auto [frag,offset]=masec->getFragment(esym->st_value);
+        assert(frag!=nullptr);
+        sym->setSectionFragment(frag);
+        sym->Value=offset;
     }
 }

@@ -12,6 +12,7 @@ using ArHdr=ar_hdr;
 
 bool IsAbs(Sym*);
 bool IsUndef(Sym*);
+bool IsCommon(Sym*);
 
 std::string_view ElfGetName(std::pair<uint8_t*,size_t> StrTab,uint32_t Offset);
 
@@ -28,3 +29,5 @@ ArEnumtype getArEnumtype(ArHdr* hdr);
 std::string getObjfileName(ArHdr* hdr,ArHdr* Strtab);
 
 std::pair<uint8_t*,size_t> getArSection(ArHdr* hdr);
+
+void ZeroInit(void* ptr,size_t size);

@@ -24,6 +24,7 @@ int main(int argc,char **argv){
     }
 
     Passes::resolveSymbols();
+    Passes::registerSectionPieces();
 
     return 0;
 }

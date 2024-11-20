@@ -2,6 +2,11 @@
 #include <cassert>
 #include "Stringlib.h"
 
+void ZeroInit(void* ptr,size_t size){
+    for(size_t i=0;i<size;i++)
+        ((uint8_t*)ptr)[i]=0;
+}
+
 std::string getObjfileName(ArHdr* hdr,ArHdr* AHStrtab){
     auto RawName=std::string(hdr->ar_name,sizeof(hdr->ar_name));
     // Long filename
@@ -63,6 +68,10 @@ bool IsAbs(Sym* sym){
 
 bool IsUndef(Sym* sym){
     return sym->st_shndx==SHN_UNDEF;
+}
+
+bool IsCommon(Sym* sym){
+    return sym->st_shndx==SHN_COMMON;
 }
 
 std::pair<uint8_t*,size_t> getArSection(ArHdr* hdr){

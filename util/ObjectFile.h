@@ -7,15 +7,20 @@
 #include <queue>
 
 class InputSection;
+class MergeableSection;
 
 struct ObjectFile:public InputFile {
     Shdr* SymtabSec;
     std::pair<uint32_t*,size_t> SymtabShndxSec;
-    std::vector<std::unique_ptr<InputSection>> Sections;    
+    std::vector<std::unique_ptr<InputSection>> Sections;
+
+    std::vector<std::unique_ptr<MergeableSection>> MAbleSections;
+
 public:    
     void initFileStructure() override;
     void initSections();
     void initSymbols();
+    void initMergeableSections();
 
     void resolveSymbols();
 
@@ -28,4 +33,8 @@ public:
     void markLiveObjects(std::function<void(ObjectFile*)> f);
 
     void clearSymbols();
+
+    MergeableSection* splitSection(InputSection* isec);
+
+    void registerSectionPieces();
 };

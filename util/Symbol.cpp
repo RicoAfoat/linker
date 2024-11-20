@@ -3,6 +3,9 @@
 #include "InputSection.h"
 #include "Context.h"
 #include "Singleton.h"
+#include "SectionFragment.h"
+#include "mergeablesection.h"
+#include "mergedsection.h"
 #include <cassert>
 
 Symbol::Symbol(std::string_view Name) : Name(Name) {}
@@ -23,4 +26,14 @@ void Symbol::clear() {
     File=nullptr;
     InputSec=nullptr;
     SymIdx=-1;
+}
+
+void Symbol::setInputSection(InputSection* isec) {
+    InputSec=isec;
+    SecFrag=nullptr;
+}
+
+void Symbol::setSectionFragment(SectionFragment* sf) {
+    SecFrag=sf;
+    InputSec=nullptr;
 }
