@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "ELF.h"
 class ObjectFile;
 class InputSection;
 struct Symbol{ 

@@ -2,6 +2,7 @@
 #include "Singleton.h"
 #include "Context.h"
 #include "InputSection.h"
+#include "Symbol.h"
 #include <cassert>
 
 void UnzipArchiveFiles::readArchiveFile(std::string fileName){

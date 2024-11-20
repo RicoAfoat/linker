@@ -2,6 +2,7 @@
 #include "Singleton.h"
 #include "ArchiveFile.h"
 #include "InputSection.h"
+#include "Symbol.h"
 
 #include <fstream>
 #include <iostream>
@@ -49,6 +50,4 @@ void ArchiveFile::initFileStructure(){
         // Obj->setArchiveFile(this);
         Singleton<Context>().ExtractObjs.emplace_back(Obj);
     }
-    
-    delete Strtab;
 }
