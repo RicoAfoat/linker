@@ -1,6 +1,8 @@
 #include "ExtractArchive.h"
 #include "Singleton.h"
 #include "Context.h"
+#include "InputSection.h"
+#include <cassert>
 
 void UnzipArchiveFiles::readArchiveFile(std::string fileName){
     auto& IncludeDir=Singleton<Context>().LibraryPaths;
@@ -10,9 +12,9 @@ void UnzipArchiveFiles::readArchiveFile(std::string fileName){
         std::string path=Dir+"/"+fileName;
         std::cerr<<"Trying to open "<<path<<std::endl;
         
-        auto ArchiveFile=ArchiveFile::OpenWith(path);
-        if(ArchiveFile==nullptr)continue;
-        Singleton<Context>().Archives.emplace_back(ArchiveFile);
+        auto AF=FileBuffer::OpenWith<ArchiveFile>(path);
+        if(AF==nullptr)continue;
+        Singleton<Context>().Archives.emplace_back(AF);
         return;
     }
 

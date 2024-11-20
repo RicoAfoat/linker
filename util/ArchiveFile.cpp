@@ -1,5 +1,7 @@
 #include "Context.h"
 #include "Singleton.h"
+#include "ArchiveFile.h"
+#include "InputSection.h"
 
 #include <fstream>
 #include <iostream>
@@ -16,35 +18,35 @@ void ArchiveFile::initFileStructure(){
     ArHdr* Strtab=nullptr;
     for(auto Offset=8;Offset<Limi;){
         auto CurAddr=StartAddr+Offset;
-        auto Arhdr=getNew<ArHdr>(CurAddr,Limi-Offset);
-        Offset+=Arhdr->getSize()/*ArHdr size*/+Arhdr->getArSectionSize()/*Following Ar Section's Size*/;
         
-        switch (Arhdr->getType())
+        auto AH=(ArHdr*)CurAddr;
+        Offset+=sizeof(ArHdr)+getArSectionSize(AH);
+
+        switch (getArEnumtype(AH))
         {
         case ArEnumtype::AR_STR:
-            Strtab=Arhdr;
+            Strtab=AH;
             break;
         case ArEnumtype::AR_SYM:
             /* 后面可以用这个来加速解析，只考虑功能性是非必要的 */
-            delete Arhdr;
             break;
         case ArEnumtype::AR_OBJ:
-            ArHdrs.emplace_back(Arhdr);
+            ArHdrs.emplace_back(AH);
             break;
         default:
             assert(0&&"unimpl");
         }
+
         if(Offset%2==1)Offset++;
     }
     
     // use Strtab to read all Obj names(if there're long name)
     for(auto& hdr:ArHdrs){
-        auto Name=hdr->getObjfileName(Strtab);
-        auto ObjAddr=hdr->getArSectionAddr();
-        auto ObjSize=hdr->getArSectionSize();
+        auto Name=getObjfileName(hdr,Strtab);
+        auto [ObjAddr,ObjSize]=getArSection(hdr);
         std::cerr<<"Extracting Object File:"<<Name<<"\n";
-        auto Obj=ObjectFile::OpenWith(Name,(uint8_t*)ObjAddr,ObjSize);
-        Obj->setArchiveFile(this);
+        auto Obj=FileBuffer::OpenWith<ObjectFile>(Name,(uint8_t*)ObjAddr,ObjSize);
+        // Obj->setArchiveFile(this);
         Singleton<Context>().ExtractObjs.emplace_back(Obj);
     }
     

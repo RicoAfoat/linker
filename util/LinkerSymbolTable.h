@@ -1,11 +1,4 @@
 #pragma once
-#include "./ObjectFile.h"
-#include "./SectionHeader.h"
+#include "Symbol.h"
 
-struct SymbolEntry{
-    ObjectFile* Obj;
-    SectionHeader* Shdr;
-    ELFSym* ESym;
-};
-
-using LinkerSymbolTable=std::unordered_map<std::string,SymbolEntry>;
+using LinkerSymbolTable=std::unordered_map<std::string,Symbol>;

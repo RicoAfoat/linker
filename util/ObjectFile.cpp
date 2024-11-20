@@ -1,190 +1,135 @@
-#include "ObjectFile.h"
-#include "Singleton.h"
-#include "Context.h"
 #include <fstream>
 #include <iostream>
 #include <cassert>
 #include <iomanip>
 
-ELFHeader& ObjectFile::getEhdr(){return *Ehdr;}
+#include "ObjectFile.h"
+#include "InputSection.h"
+#include "Symbol.h"
 
 void ObjectFile::initFileStructure(){
-    const auto [BufferAddr,Limi]=getFileBuffer();
-    Ehdr.reset(getNew<ELFHeader>(BufferAddr, Limi));
-    
-    // Get All Section Headers
-    {
-        auto Shoff=Ehdr->getShoff();
-        uint8_t* ptr=BufferAddr+Shoff;
-        auto restSize=Limi-Shoff;
-        Sections.emplace_back(new Section(this,ptr));
-        
-        auto ShdrSize=Sections[0]->getSize();
-
-        auto NumSections=getNumSection();
-        for(auto I=NumSections;I>1;I--){
-            ptr+=ShdrSize;
-            restSize-=ShdrSize;
-            auto Shdr=new Section(this,ptr);
-            if(Shdr->getShType()==SHT_SYMTAB_SHNDX)
-                SymtabShndx=Shdr;
-            Sections.emplace_back(Shdr);
-        }
-
-        // init all sections Name
-        assert(Sections[getShstrndx()]->getShType()==0x3);
-        auto NameSectionAddr=getSectionAddr(getShstrndx());
-        for(auto I=0;I<NumSections;I++)
-            Sections[I]->initAttributeStringNameOffset(NameSectionAddr);
+    InputFile::initFileStructure();
+    this->SymtabSec=this->findSection(SHT_SYMTAB);
+    if(this->SymtabSec!=nullptr){
+        this->FirstGlobal=this->SymtabSec->sh_info;
+        this->fillupElfSyms(this->SymtabSec);
+        this->SymbolStrtab=this->getBytesFromIdx(this->SymtabSec->sh_link);
     }
+    initSections();
+    initSymbols();
+}
 
-    {
-        // Get Symbol Table initialized
-        auto Syms=getSections([](Section* Shdr){
-            return Shdr->getShType() == SHT_SYMTAB;
-        });
-
-        if(Syms.size()==0)
-            return;
-
-        assert(Syms.size()==1&&"SYMTAB will be only one in an ELF");
-        
-        // find the first global
-        fisrtGlobalIndex=Syms[0]->getShInfo();
-        
-        auto& SymbolTable=getSymbolTable();
-
-        auto [SymAddr,SymSectionSize]=Syms[0]->getContent();
-
-        // Init Every Symbol Table Entry
-        // First One
-        auto SymEntry=getNew<ELFSym>(SymAddr,SymSectionSize);
-        SymbolTable.emplace_back(SymEntry);
-        auto SymEntrySize=SymEntry->getSize();
-
-        // Init rest of the Symbol Table
-        auto SymEleSize=SymSectionSize/SymEntrySize;
-        for(;SymEleSize>1;SymEleSize--){
-            SymAddr=(uint8_t*)(SymAddr)+SymEntrySize;
-            SymSectionSize-=SymEntrySize;
-            SymbolTable.emplace_back(getNew<ELFSym>(SymAddr,SymSectionSize));
-        }
-
+void ObjectFile::initSections(){
+    Sections=std::vector<std::unique_ptr<InputSection>>(ElfSections.size());
+    for(int i=0,limi=ElfSections.size();i<ElfSections.size();i++){
+        auto elfsec=ElfSections[i];
+        switch (elfsec->sh_type)
         {
-            // Get .symtab corresponding .strtab 
-            // std::cerr<<Syms[0]->getShLink()<<std::endl;
-            auto& StrTab=getSections()[Syms[0]->getShLink()];
-            assert(StrTab->getShType()==SHT_STRTAB);
-            
-            // init all sections Name
-            auto NameSectionAddr=getSectionAddr(StrTab.get());
-            auto NumSyms=SymbolTable.size();
-            for(auto I=0;I<NumSyms;I++)
-                SymbolTable[I]->initAttributeStringNameOffset(NameSectionAddr);
+        case SHT_GROUP:
+        case SHT_SYMTAB:
+        case SHT_STRTAB:
+        case SHT_REL:
+        case SHT_RELA:
+        case SHT_NULL:
+            break;
+        case SHT_SYMTAB_SHNDX:
+            fillupSymtabShndxSec(elfsec);
+            break;
+        default:
+            Sections[i]=std::make_unique<InputSection>(this,i);
+            break;
         }
     }
-
-
-    initializeMergeableSections(Singleton<Context>());
 }
 
-std::vector<Section*> ObjectFile::getSections(std::function<bool(Section*)> Condition){
-    std::vector<Section*> Result;
-    auto numShdrs=getNumSection();
-    for(auto I=0;I<numShdrs;I++){
-        auto ptr=Sections[I].get();
-        if(Condition(ptr))
-            Result.push_back(ptr);
-    }
-    return Result;
+void ObjectFile::fillupSymtabShndxSec(Shdr* s){
+    auto [Content,Size]=this->getBytesFromIdx(s->sh_link);
+    auto nums=Size/4;
+    this->SymtabShndxSec=std::pair<uint32_t*,size_t>((uint32_t*)Content,nums);
 }
 
-void ObjectFile::resolveSymbolsInExtractFiles(Context& Ctx){
-    std::cerr<<"---Extract Symbols In "<<getFileName()<<"---"<<std::endl;
-    auto& ESyms=getSymbolTable();
-    for(uint32_t I=fisrtGlobalIndex,limi=ESyms.size();I<limi;I++){
-        auto& ESym=ESyms[I];
-        auto Name=ESym->getName();
-        auto Shdr=Sections[ESym->getShndx(SymtabShndx,I)].get();
-        if(ESym->isUndef()){
-            std::cerr<<"find undef symbol:\t"<<Name<<std::endl;
-            continue;
-        }
-
-        // if outside is defined strong, then weak symbol will be used
-        // if(ESym->getSymbolBinding()==STB_WEAK){
-        //     std::cerr<<"find weak symbol:\t"<<Name<<std::endl;
-        //     continue;
-        // }
-
-        std::cerr<<"Register Global Symbol:\t"<<Name<<std::endl;
-        auto& SymTable=Ctx.ArchiveSymbolTable;
-        if(SymTable.find(Name)!=SymTable.end())
-            // The linker will use the first symbol defined in those extract from archive files
-            // demonstrate by experiments 
-            continue;
-        auto& Entry=SymTable[Name];
-        Entry.ESym=ESym.get();
-        Entry.Obj=this;
-        Entry.Shdr=Shdr;
-    }
-}
-
-void ObjectFile::resolveSymbols(Context& Ctx){
-    std::cerr<<"---Resolve Symbols In "<<getFileName()<<"---"<<std::endl;
+void ObjectFile::initSymbols(){
+    if(this->SymtabSec==nullptr)
+        return;
     
-    auto& ESyms=getSymbolTable();
-    for(uint32_t I=fisrtGlobalIndex,limi=ESyms.size();I<limi;I++){
-        auto& ESym=ESyms[I];
-        auto Name=ESym->getName();
-        auto Shdr=Sections[ESym->getShndx(SymtabShndx,I)].get();
+    for(int i=0;i<FirstGlobal;i++)
+        LocalSymbols.push_back(Symbol(""));
+    LocalSymbols[0].File=this;
 
-        if(ESym->isUndef()){
-            // Add to undef set
-            std::cerr<<"Find undef symbol "<<ESym->getName()<<", add to undef set\n";
-            Ctx.UndefSymbols.push(Name);
+    for(int i=0;i<FirstGlobal;i++){
+        auto esym=ElfSyms[i];
+        auto& sym=LocalSymbols[i];
+        sym.Name=ElfGetName(SymbolStrtab,esym->st_name);
+        sym.File=this;
+        sym.Value=esym->st_value;
+        sym.SymIdx=i;
+
+        if(!IsAbs(esym))
+            sym.InputSec=Sections[getShndx(esym,i)].get();
+    }
+
+    for(int i=0;i<FirstGlobal;i++)
+        Symbols.push_back(&LocalSymbols[i]);
+
+    for(int i=FirstGlobal;i<ElfSyms.size();i++){
+        auto esym=ElfSyms[i];
+        auto name=ElfGetName(SymbolStrtab,esym->st_name);
+        Symbols.push_back(Symbol::getSymbolByName(name));
+    }
+}
+
+uint64_t ObjectFile::getShndx(Sym* esym,int idx){
+    assert(idx>=0&&idx<ElfSyms.size());
+    if(esym->st_shndx==SHN_XINDEX){
+        assert(idx<SymtabShndxSec.second);
+        return SymtabShndxSec.first[idx];
+    }
+    return esym->st_shndx;
+}
+
+void ObjectFile::resolveSymbols(){
+    for(auto i=FirstGlobal;i<ElfSyms.size();i++){
+        auto esym=ElfSyms[i];
+        auto sym=Symbols[i];
+        if(IsUndef(esym))
             continue;
-        }
-        // which has definition
-        std::cerr<<"Find definition of symbol:"<<ESym->getName()<<", add to final set\n";
-        auto& SymTable=Ctx.FinalSymbolTable;
-        if(SymTable.find(Name)!=SymTable.end()){
-            bool previousStrong=SymTable[Name].ESym->getSymbolBinding()==STB_GLOBAL;
-            bool thisStrong=ESym->getSymbolBinding()==STB_GLOBAL;
-            // strong and strong, fucked
-            if(previousStrong&&thisStrong){
-                std::cerr<<"Redefiniton of symbol:"<<Name<<", previous defined in "<<SymTable[Name].Obj->getFileName();
-                exit(-1);
-            }
-            // weak and weak, continue
-            if(!previousStrong&&!thisStrong)continue;
-            // weak and strong, legal
-        }
-        SymTable[Name]={this,Shdr,ESym.get()};
-    }
-}
-
-void ObjectFile::registerSectionPieces(Context& Ctx){
-    // 已经处理好当前文件的 MergeableSections，将 Symbol 与这些关联起来
-    for(int i=0,limi=SymbolTable.size();i<limi;i++){
-        auto& sym=SymbolTable[i];
-        if(sym->isAbsulute()||sym->isUndef()||sym->isCommon())continue;
-        auto Mergeable=MergeableSections[sym->getShndx(SymtabShndx,i)];
-        if(Mergeable.Parent==nullptr)continue;
-        auto [Fragment,Offset]=Mergeable.getFragment(sym->getValue());
         
+        InputSection* isec=nullptr;
+        if(!IsAbs(esym)){
+            isec=getSection(esym,i);
+            if(isec==nullptr)
+                continue;
+        }
+
+        auto shndx=getShndx(esym,i);
+        sym->InputSec=Sections[shndx].get();
     }
 }
 
-void ObjectFile::initializeMergeableSections(Context& Ctx){
-    MergeableSections.reserve(Sections.size());
+InputSection* ObjectFile::getSection(Sym* esym,int idx){
+    return Sections[getShndx(esym,idx)].get();
+}
 
-    for(int i=0,limi=Sections.size();i<limi;i++){
-        if(Sections[i]->isAlive&&Sections[i]->getShFlags()&SHF_MERGE){
-            MergeableSections[i].Parent=Ctx.getMergedSection(Sections[i]->getName(),Sections[i]->getShType(),Sections[i]->getShFlags());
-            Sections[i]->splitSection(MergeableSections[i]);
-            // Already merged.
-            Sections[i]->isAlive=false;
+void ObjectFile::markLiveObjects(std::function<void(ObjectFile*)> f){
+    assert(isAlive);
+    for(int i=FirstGlobal;i<ElfSyms.size();i++){
+        auto esym=ElfSyms[i];
+        auto sym=Symbols[i];
+        
+        if(sym->File==nullptr)
+            continue;
+
+        if(IsUndef(esym)&&!sym->File->isAlive){
+            sym->File->isAlive=true;
+            f(sym->File);
         }
+    }
+}
+
+void ObjectFile::clearSymbols(){
+    for(int i=FirstGlobal;i<ElfSyms.size();i++){
+        auto sym=Symbols[i];
+        if(sym->File==this)
+            sym->clear();
     }
 }

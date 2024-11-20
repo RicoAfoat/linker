@@ -5,7 +5,6 @@
 #include <iostream>
 
 // A very slow one that will read all the contents in the file to a binary buffer
-template<typename T>
 class FileBuffer{
 protected:
     std::vector<uint8_t> FileStorage;
@@ -22,6 +21,7 @@ public:
 
     inline std::string getFileName(){return FileName;}
 
+    template<typename T>
     static T* OpenWith(std::string FileName){
         std::ifstream file(FileName, std::ios::binary | std::ios::ate);
         if (!file.is_open())
@@ -43,6 +43,7 @@ public:
         return OF;
     }
     // used for those extract from archive files
+    template<typename T>
     static T* OpenWith(std::string FileName,uint8_t* Addr,uint32_t Size){
         auto OF=new T();
         OF->FileRef=std::make_pair(Addr,Size);

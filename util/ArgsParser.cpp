@@ -1,5 +1,6 @@
 #include "ArgsParser.h"
 #include "Singleton.h"
+#include "InputSection.h"
 #include <vector>
 #include <memory>
 #include <iostream>
