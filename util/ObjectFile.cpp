@@ -101,8 +101,12 @@ void ObjectFile::resolveSymbols(){
                 continue;
         }
 
+        if(sym->File!=nullptr)continue;
+        sym->File=this;
         auto shndx=getShndx(esym,i);
         sym->InputSec=Sections[shndx].get();
+        sym->Value=esym->st_value;
+        sym->SymIdx=i;
     }
 }
 
@@ -121,6 +125,7 @@ void ObjectFile::markLiveObjects(std::function<void(ObjectFile*)> f){
 
         if(IsUndef(esym)&&!sym->File->isAlive){
             sym->File->isAlive=true;
+            std::cerr<<"Marking file as alive: "<<sym->File->getFileName()<<std::endl;
             f(sym->File);
         }
     }

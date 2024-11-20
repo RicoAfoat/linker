@@ -47,6 +47,7 @@ void ArchiveFile::initFileStructure(){
         auto [ObjAddr,ObjSize]=getArSection(hdr);
         std::cerr<<"Extracting Object File:"<<Name<<"\n";
         auto Obj=FileBuffer::OpenWith<ObjectFile>(Name,(uint8_t*)ObjAddr,ObjSize);
+        Obj->isAlive=false;
         // Obj->setArchiveFile(this);
         Singleton<Context>().ExtractObjs.emplace_back(Obj);
     }

@@ -4,8 +4,8 @@
 class ObjectFile;
 class InputSection;
 struct Symbol{ 
-    ObjectFile* File;
-    InputSection* InputSec;
+    ObjectFile* File=nullptr;
+    InputSection* InputSec=nullptr;
     std::string_view Name;
     uint64_t Value;
     int SymIdx;

@@ -2,7 +2,9 @@
 #include "./util/ExtractArchive.h"
 #include "./util/Singleton.h"
 #include "./util/Context.h"
-// #include "./util/Passes.h"
+#include "./util/Pass.h"
+#include "./util/Symbol.h"
+#include "./util/InputSection.h"
 #include <iostream>
 int main(int argc,char **argv){
     std::cerr<<"--------------------"<<std::endl;
@@ -12,7 +14,16 @@ int main(int argc,char **argv){
     
     ArgParser::parse(argc,argv);
     UnzipArchiveFiles::unzip();
-    // PASSES::run(Singleton<Context>());
+    
+    auto& Ctx=Singleton<Context>();
+    for(auto objfilename:Ctx.ObjectFiles){
+        std::cerr<<"Reading Object File:"<<objfilename<<"\n";
+        auto obj=FileBuffer::OpenWith<ObjectFile>(objfilename);
+        obj->isAlive=true;
+        Ctx.Objs.emplace_back(obj);
+    }
+
+    Passes::resolveSymbols();
 
     return 0;
 }
