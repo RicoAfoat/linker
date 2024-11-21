@@ -9,7 +9,7 @@ InputSection::InputSection(ObjectFile* f,uint32_t shndx){
     this->isAlive=true;
 
     auto shdr=getShdr();
-    assert(shdr->sh_flags&SHF_COMPRESSED==0);
+    assert((shdr->sh_flags&SHF_COMPRESSED)==0);
     this->ShSize=Content.second;
 
     auto toP2Align=[](uint64_t alignment) ->uint8_t {

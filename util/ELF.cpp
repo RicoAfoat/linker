@@ -77,3 +77,8 @@ bool IsCommon(Sym* sym){
 std::pair<uint8_t*,size_t> getArSection(ArHdr* hdr){
     return {(uint8_t*)(hdr)+sizeof(ArHdr),getArSectionSize(hdr)};
 }
+
+uint64_t AlignTo(uint64_t val,uint64_t align){
+    if(align==0)return val;
+    return (val+align-1) & (~(align-1));
+}

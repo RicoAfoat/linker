@@ -9,6 +9,7 @@ using Ehdr=Elf64_Ehdr;
 using Shdr=Elf64_Shdr;
 using Sym=Elf64_Sym;
 using ArHdr=ar_hdr;
+using Phdr=Elf64_Phdr;
 
 bool IsAbs(Sym*);
 bool IsUndef(Sym*);
@@ -31,3 +32,7 @@ std::string getObjfileName(ArHdr* hdr,ArHdr* Strtab);
 std::pair<uint8_t*,size_t> getArSection(ArHdr* hdr);
 
 void ZeroInit(void* ptr,size_t size);
+
+uint64_t AlignTo(uint64_t val,uint64_t align);
+
+void WriteMagic(void* dst);

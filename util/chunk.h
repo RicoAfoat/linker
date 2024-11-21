@@ -4,10 +4,14 @@
 #include "ELF.h"
 
 struct Chunk {
-    // std::string Name;
-    std::string Name;
+private:
     Shdr SectionHeader;
+public:
+    std::string Name;
     Chunk();
+    virtual Shdr* getShdr();
+    virtual void CopyBuf();
+    virtual ~Chunk()=default;
 };
 
 

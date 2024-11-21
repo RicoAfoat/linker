@@ -8,6 +8,9 @@
 #include "SectionFragment.h"
 #include "mergedsection.h"
 #include "mergeablesection.h"
+#include "InputSection.h"
+#include "OutputEhdr.h"
+#include "Symbol.h"
 
 struct Context{
     std::string OutputFile="a.out";
@@ -23,4 +26,11 @@ struct Context{
     LinkerSymbolTable SymbolMap;
 
     std::vector<std::unique_ptr<MergedSection>> mergedSections;
+
+    // Chunks only for output, not for manage the memory
+    std::vector<Chunk*> Chunks;
+
+    OutputEhdr Ehdr;
+
+    std::vector<uint8_t> OutputBuf;
 };

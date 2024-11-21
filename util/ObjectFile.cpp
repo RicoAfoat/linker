@@ -41,7 +41,7 @@ void ObjectFile::initSections(){
             fillupSymtabShndxSec(elfsec);
             break;
         default:
-            Sections[i]=std::make_unique<InputSection>(this,i);
+            Sections[i].reset(new InputSection(this,i));
             break;
         }
     }
@@ -148,7 +148,7 @@ void ObjectFile::initMergeableSections(){
 
     for(int i=0,limi=Sections.size();i<limi;i++){
         auto isec=Sections[i].get();
-        if(isec!=nullptr && isec->isAlive && isec->getShdr()->sh_flags&SHF_MERGE!=0){
+        if(isec!=nullptr && isec->isAlive && (isec->getShdr()->sh_flags&SHF_MERGE)!=0){
             MAbleSections[i].reset(splitSection(isec));
             isec->isAlive=false;
         }
@@ -177,7 +177,7 @@ MergeableSection* ObjectFile::splitSection(InputSection* isec){
 
     if(shdr->sh_flags&SHF_STRINGS){
         for(auto offset=0;offset<Size;){
-            auto end=findNull(Content+offset,shdr->sh_entsize,Size-offset);
+            auto end=findNull(Content+offset,shdr->sh_entsize,Size-offset)+shdr->sh_entsize;
             
             auto view=std::string_view((char*)Content+offset,end);
             MAS->Strs.push_back(view);
@@ -203,7 +203,6 @@ void ObjectFile::registerSectionPieces(){
         if(masec==nullptr)
             continue;
         
-        masec->Fragments=std::vector<SectionFragment*>(masec->Strs.size(),nullptr);
         for(auto& Str:masec->Strs){
             auto frag=masec->Parent->Insert(Str,masec->P2Align);
             masec->Fragments.push_back(frag);

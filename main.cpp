@@ -25,6 +25,9 @@ int main(int argc,char **argv){
 
     Passes::resolveSymbols();
     Passes::registerSectionPieces();
+    Passes::createSyntheticSections();
+
+    Passes::writeOutputFile();
 
     return 0;
 }

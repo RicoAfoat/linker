@@ -9,8 +9,8 @@
 
 MergedSection::MergedSection(std::string name,uint64_t flag,uint32_t type){
     this->Name=name;
-    this->SectionHeader.sh_flags=flag;
-    this->SectionHeader.sh_type=type;
+    this->getShdr()->sh_flags=flag;
+    this->getShdr()->sh_type=type;
 }
 
 MergedSection* MergedSection::getMergedSection(std::string_view name,uint64_t flag,uint32_t type){
@@ -21,7 +21,7 @@ MergedSection* MergedSection::getMergedSection(std::string_view name,uint64_t fl
     auto& Ctx=Singleton<Context>();
     auto find=[&Ctx,&OName,&flag,&type]() ->MergedSection* {
         for(auto& ms:Ctx.mergedSections){
-            if(ms->Name==OName&&flag==ms->SectionHeader.sh_flags&&type==ms->SectionHeader.sh_type)
+            if(ms->Name==OName&&flag==ms->getShdr()->sh_flags&&type==ms->getShdr()->sh_type)
                 return ms.get();
         }
         return nullptr;
