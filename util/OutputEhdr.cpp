@@ -29,6 +29,5 @@ void OutputEhdr::CopyBuf(){
 
     // copy to the output stream
     auto& Ctx=Singleton<Context>();
-    auto copylocate=Ctx.OutputBuf.data()+getShdr()->sh_offset;
-    memcpy(copylocate,&ehdr,sizeof(Ehdr));
+    CopyInto((uint8_t*)&ehdr,sizeof(Ehdr));
 }

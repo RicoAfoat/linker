@@ -1,11 +1,15 @@
 #pragma once
 #include <cstdint>
+class Chunk;
 namespace Passes{
 
 void resolveSymbols();
 void markLiveObjects();
 void registerSectionPieces();
 void createSyntheticSections();
-uint64_t getOutputFileSize();
 void writeOutputFile();
+void computeSectionSizes();
+void collectOutputSections();
+void BinSections();
+uint64_t setOutputSectionOffsets();
 } // namespace Passes

@@ -27,6 +27,13 @@ int main(int argc,char **argv){
     Passes::registerSectionPieces();
     Passes::createSyntheticSections();
 
+    Passes::BinSections();
+    Passes::collectOutputSections();
+    Passes::computeSectionSizes();
+
+    for(auto chunk:Ctx.Chunks)
+        chunk->UpdateShdr();
+        
     Passes::writeOutputFile();
 
     return 0;

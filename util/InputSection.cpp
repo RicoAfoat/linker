@@ -1,5 +1,6 @@
 #include "InputSection.h"
 #include "ObjectFile.h"
+#include "OutputSection.h"
 #include <cassert>
 
 InputSection::InputSection(ObjectFile* f,uint32_t shndx){
@@ -10,7 +11,6 @@ InputSection::InputSection(ObjectFile* f,uint32_t shndx){
 
     auto shdr=getShdr();
     assert((shdr->sh_flags&SHF_COMPRESSED)==0);
-    this->ShSize=Content.second;
 
     auto toP2Align=[](uint64_t alignment) ->uint8_t {
         for(uint8_t i=0;i<64;i++)
@@ -20,6 +20,8 @@ InputSection::InputSection(ObjectFile* f,uint32_t shndx){
     };
 
     this->P2Align=toP2Align(shdr->sh_addralign);
+    // this->OutSec=OutputSection::getOutputSection(std::string(this->getName()),shdr->sh_type,shdr->sh_flags);
+    // this->OutSec->Member.push_back(this);
 }
 
 Shdr* InputSection::getShdr(){

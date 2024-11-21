@@ -11,6 +11,8 @@
 #include "InputSection.h"
 #include "OutputEhdr.h"
 #include "Symbol.h"
+#include "OutputSection.h"
+#include "OutputShdr.h"
 
 struct Context{
     std::string OutputFile="a.out";
@@ -30,7 +32,10 @@ struct Context{
     // Chunks only for output, not for manage the memory
     std::vector<Chunk*> Chunks;
 
-    OutputEhdr Ehdr;
+    std::vector<std::unique_ptr<OutputSection>> OutSections;
+
+    OutputEhdr OutEhdr;
+    OutputShdr OutShdr;
 
     std::vector<uint8_t> OutputBuf;
 };
