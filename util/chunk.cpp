@@ -42,6 +42,9 @@ uint32_t Chunk::rank() {
     if(this==&Ctx.OutEhdr){
         return 0;
     }
+    if(this==&Ctx.OutPhdr){
+        return 1;
+    }
     if(tp==SHT_NOTE){
         return 2;
     }

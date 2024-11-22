@@ -6,6 +6,7 @@
 #include "Symbol.h"
 #include "mergeablesection.h"
 #include "InputSection.h"
+#include <cstring>
 
 MergedSection::MergedSection(std::string name,uint64_t flag,uint32_t type){
     this->Name=name;
@@ -47,4 +48,40 @@ SectionFragment* MergedSection::Insert(std::string_view Content,uint8_t P2Align)
         Storage->P2Align=P2Align;
 
     return Storage.get();
+}
+
+void MergedSection::AssignOffsets(){
+    std::vector<std::pair<std::string_view,SectionFragment*>> vec;
+    for(auto& [name,ptr]:Map)
+        vec.emplace_back(name,ptr.get());
+    std::sort(vec.begin(),vec.end(),[](auto& a,auto& b){
+        auto&& [namea,sa]=a;
+        auto&& [nameb,sb]=b;
+        if(sa->P2Align!=sb->P2Align)
+            return sa->P2Align<sb->P2Align;
+        auto&& sizea=namea.size();
+        auto&& sizeb=nameb.size();
+        if(sizea!=sizeb)
+            return sizea<sizeb;
+        return namea<nameb;
+    });
+
+    uint64_t offset=0;
+    uint8_t align=0;
+    for(auto& [_,sf]:vec){
+        offset=AlignTo(offset,uint64_t(1)<<sf->P2Align);
+        sf->Offset=offset;
+        offset+=_.size();
+        align=std::max(align,sf->P2Align);
+    }
+    getShdr()->sh_size=AlignTo(offset,uint64_t(1)<<align);
+    getShdr()->sh_addralign=uint64_t(1)<<align;
+}
+
+void MergedSection::CopyBuf(){
+    uint8_t* copylocate=Singleton<Context>().OutputBuf.data()+getShdr()->sh_offset;
+    for(auto& [name,ptr]:Map){
+        auto loc=copylocate+ptr->Offset;
+        memcpy(loc,name.data(),name.size());
+    }
 }

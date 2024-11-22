@@ -10,11 +10,6 @@
 #include <cassert>
 #include <cstring>
 
-static bool isTbss(Chunk* chunk){
-    auto shdr=chunk->getShdr();
-    return shdr->sh_type==SHT_NOBITS&&(shdr->sh_flags&SHF_TLS);
-}
-
 void Passes::resolveSymbols(){
     auto& Ctx=Singleton<Context>();
 
@@ -60,6 +55,7 @@ void Passes::createSyntheticSections(){
     auto& Ctx=Singleton<Context>();
     Ctx.Chunks.push_back(&Ctx.OutEhdr);
     Ctx.Chunks.push_back(&Ctx.OutShdr);
+    Ctx.Chunks.push_back(&Ctx.OutPhdr);
 }
 
 uint64_t Passes::setOutputSectionOffsets(){
@@ -133,6 +129,11 @@ void Passes::collectOutputSections() {
     for(auto& osec:Osecs)
         if(osec->Member.size()!=0)
             Chunks.push_back(osec.get());
+
+    auto& Msecs=Singleton<Context>().mergedSections;
+    for(auto& msec:Msecs)
+        if(msec->getShdr()->sh_size!=0)
+            Chunks.push_back(msec.get());
     return;
 }
 
@@ -177,4 +178,10 @@ void Passes::sortOutputSections(){
         // }
         return ranka<rankb;
     });
+}
+
+void Passes::computeMergedSectionSizes(){
+    auto& Msecs=Singleton<Context>().mergedSections;
+    for(auto& msec:Msecs)
+        msec->AssignOffsets();
 }

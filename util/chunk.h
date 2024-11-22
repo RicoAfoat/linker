@@ -20,4 +20,7 @@ public:
     virtual ~Chunk()=default;
 };
 
-
+inline bool isTbss(Chunk* chunk){
+    auto shdr=chunk->getShdr();
+    return shdr->sh_type==SHT_NOBITS&&(shdr->sh_flags&SHF_TLS);
+}

@@ -13,6 +13,7 @@
 #include "Symbol.h"
 #include "OutputSection.h"
 #include "OutputShdr.h"
+#include "OutputPhdr.h"
 
 struct Context{
     std::string OutputFile="a.out";
@@ -34,8 +35,11 @@ struct Context{
 
     std::vector<std::unique_ptr<OutputSection>> OutSections;
 
+    uint64_t TpAddr=0;
+    
     OutputEhdr OutEhdr;
     OutputShdr OutShdr;
+    OutputPhdr OutPhdr;
 
     std::vector<uint8_t> OutputBuf;
 };

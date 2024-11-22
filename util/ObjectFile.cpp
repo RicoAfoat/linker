@@ -170,8 +170,8 @@ MergeableSection* ObjectFile::splitSection(InputSection* isec){
     auto MAS=new MergeableSection();
     MAS->Parent=MergedSection::getMergedSection(
         std::string(isec->getName()),
-        shdr->sh_type,
-        shdr->sh_flags
+        shdr->sh_flags,
+        shdr->sh_type
     );
     MAS->P2Align=isec->P2Align;
 

@@ -24,9 +24,11 @@ void OutputEhdr::CopyBuf(){
     ehdr.e_machine=EM_RISCV;
     ehdr.e_version=EV_CURRENT;
     ehdr.e_entry=getEntryAddr();
+    ehdr.e_phoff=Ctx.OutPhdr.getShdr()->sh_offset;
     ehdr.e_shoff=Ctx.OutShdr.getShdr()->sh_offset;
     ehdr.e_ehsize=sizeof(Ehdr);
     ehdr.e_phentsize=sizeof(Phdr);
+    ehdr.e_phnum=uint16_t(Ctx.OutPhdr.getShdr()->sh_size/sizeof(Phdr));
     ehdr.e_shentsize=sizeof(Shdr);
     ehdr.e_shnum=uint16_t(Ctx.OutShdr.getShdr()->sh_size/sizeof(Shdr));
 
