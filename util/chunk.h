@@ -11,6 +11,7 @@ protected:
 public:
     void CopyInto(uint8_t* buf, size_t size);
     Chunk();
+    uint32_t rank();
     virtual Shdr* getShdr();
     virtual void CopyBuf();
     virtual void UpdateShdr();

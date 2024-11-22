@@ -30,6 +30,7 @@ int main(int argc,char **argv){
     Passes::BinSections();
     Passes::collectOutputSections();
     Passes::computeSectionSizes();
+    Passes::sortOutputSections();
 
     for(auto chunk:Ctx.Chunks)
         chunk->UpdateShdr();

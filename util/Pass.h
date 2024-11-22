@@ -12,4 +12,5 @@ void computeSectionSizes();
 void collectOutputSections();
 void BinSections();
 uint64_t setOutputSectionOffsets();
+void sortOutputSections();
 } // namespace Passes

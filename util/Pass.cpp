@@ -10,6 +10,11 @@
 #include <cassert>
 #include <cstring>
 
+static bool isTbss(Chunk* chunk){
+    auto shdr=chunk->getShdr();
+    return shdr->sh_type==SHT_NOBITS&&(shdr->sh_flags&SHF_TLS);
+}
+
 void Passes::resolveSymbols(){
     auto& Ctx=Singleton<Context>();
 
@@ -59,18 +64,46 @@ void Passes::createSyntheticSections(){
 
 uint64_t Passes::setOutputSectionOffsets(){
     auto& Ctx=Singleton<Context>();
-    uint64_t size=0;
-    // std::sort(Ctx.Chunks.begin(),Ctx.Chunks.end(),[](Chunk* a,Chunk* b){
-        // return a->getName()<b->getName();
-    // });
+    uint64_t Addr=IMAGE_BASE;
     for(auto& chunk:Ctx.Chunks){
         auto shdr=chunk->getShdr();
-        size=AlignTo(size,shdr->sh_addralign);
-        // std::cerr<<chunk->getName()<<" "<<size<<std::endl;
-        shdr->sh_offset=size;
-        size+=shdr->sh_size;
+
+        if((shdr->sh_flags&SHF_ALLOC)==0)
+            continue;
+
+        Addr=AlignTo(Addr,shdr->sh_addralign);
+        shdr->sh_addr=Addr;
+
+        if(!isTbss(chunk))
+            Addr+=shdr->sh_size;
     }
-    return size;
+
+    {
+        auto first=Ctx.Chunks[0]->getShdr();
+        decltype(Ctx.Chunks.size()) i=0,limi=Ctx.Chunks.size();
+        for(;;){
+            auto shdr=Ctx.Chunks[i]->getShdr();
+            shdr->sh_offset=shdr->sh_addr-first->sh_addr;
+            i++;
+            if(i>=limi||(Ctx.Chunks[i]->getShdr()->sh_flags&SHF_ALLOC)==0)
+                break;
+        }
+        auto last=Ctx.Chunks[i-1]->getShdr();
+        auto size=last->sh_offset+last->sh_size;
+
+        for(;i<limi;i++){
+            auto shdr=Ctx.Chunks[i]->getShdr();
+            size=AlignTo(size,shdr->sh_addralign);
+            shdr->sh_offset=size;
+            size+=shdr->sh_size;
+        }
+
+        for(auto chunk:Ctx.Chunks){
+            std::cerr<<chunk->getName()<<" "<<chunk->getShdr()->sh_offset<<" "<<chunk->getShdr()->sh_size<<std::endl;
+        }
+
+        return size;
+    }
 }
 
 void WriteMagic(void* dst){
@@ -132,4 +165,16 @@ void Passes::computeSectionSizes(){
         osec->getShdr()->sh_size=offset;
         osec->getShdr()->sh_addralign=uint64_t(1)<<p2align;
     }
+}
+
+void Passes::sortOutputSections(){
+    auto& chunks=Singleton<Context>().Chunks;
+    std::sort(chunks.begin(),chunks.end(),[](Chunk* a,Chunk* b){
+        auto ranka=a->rank();
+        auto rankb=b->rank();
+        // if(ranka==rankb){
+        //     return a->getName()<b->getName();
+        // }
+        return ranka<rankb;
+    });
 }

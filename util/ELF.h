@@ -11,6 +11,8 @@ using Sym=Elf64_Sym;
 using ArHdr=ar_hdr;
 using Phdr=Elf64_Phdr;
 
+const uint64_t IMAGE_BASE=0x200000;
+
 bool IsAbs(Sym*);
 bool IsUndef(Sym*);
 bool IsCommon(Sym*);

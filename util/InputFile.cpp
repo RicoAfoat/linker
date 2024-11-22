@@ -62,3 +62,7 @@ Shdr* InputFile::findSection(uint32_t type){
         if(s->sh_type==type)return s;
     return nullptr;
 }
+
+Ehdr* InputFile::getEhdr(){
+    return (Ehdr*)getFileBuffer().first;
+}

@@ -21,4 +21,6 @@ struct InputFile:public FileBuffer{
 
     void fillupElfSyms(Shdr* s);
     Shdr* findSection(uint32_t type);
+
+    Ehdr* getEhdr();
 };
