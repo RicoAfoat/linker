@@ -119,9 +119,9 @@ void Passes::writeOutputFile(){
 
     std::cerr<<"chunks count:"<<Ctx.Chunks.size()<<std::endl;
 
-    for(int i=0;i<32;i++){
-        std::cerr<<Ctx.Chunks[i]->getName()<<std::endl;
-        Ctx.Chunks[i]->CopyBuf();
+    for(auto chunk:Ctx.Chunks){
+        std::cerr<<chunk->getName()<<std::endl;
+        chunk->CopyBuf();
     }
     
     // for(auto& chunk:Ctx.Chunks)
