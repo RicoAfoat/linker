@@ -21,7 +21,8 @@ void OutputShdr::UpdateShdr(){
 void OutputShdr::CopyBuf(){
     auto& Ctx=Singleton<Context>();
     auto copylocate=Ctx.OutputBuf.data()+SectionHeader.sh_offset;
-    memcpy(copylocate,&SectionHeader,sizeof(Shdr));
+    auto dummySection=Shdr();ZeroInit(&dummySection,sizeof(Shdr));
+    memcpy(copylocate,&dummySection,sizeof(Shdr));
     for(auto chunk:Ctx.Chunks)
         if(chunk->getShndx()>0)
             memcpy(copylocate+chunk->getShndx()*sizeof(Shdr),chunk->getShdr(),sizeof(Shdr));

@@ -39,14 +39,6 @@ void pushIntoPhdr(Phdr& phdr,Chunk* chunk){
     phdr.p_memsz=chunk->getShdr()->sh_addr+chunk->getShdr()->sh_size-phdr.p_vaddr;
 }
 
-std::vector<Chunk*> collect(std::vector<Chunk*>& chunks,std::function<bool(Chunk*)> condition){
-    auto ret=std::vector<Chunk*>();
-    for(auto chunk:chunks)
-        if(condition(chunk))
-            ret.push_back(chunk);
-    return ret;
-}
-
 std::vector<Phdr> OutputPhdr::createPhdrs(){
     auto& Ctx=Singleton<Context>();
     auto vec=std::vector<Phdr>();
@@ -69,41 +61,80 @@ std::vector<Phdr> OutputPhdr::createPhdrs(){
         ;
     };
 
-    auto GroupChunksIntoPhdrs=[&Ctx,&vec](std::vector<Chunk*> chunks,uint32_t PhdrType,uint64_t ConstAlignment) -> void {
-        if(chunks.size()==0)return;
-        std::unordered_map<uint32_t,Phdr> PhdrMap;
-        for(auto chunk:chunks){
-            auto Key=toPhdrFlags(chunk);
-            uint64_t Alignment=(ConstAlignment!=0)?ConstAlignment:chunk->getShdr()->sh_addralign;
-            if(PhdrMap.find(Key)==PhdrMap.end())
-                PhdrMap[Key]=definePhdr(PhdrType,Key,Alignment,chunk);
-            else
-                pushIntoPhdr(PhdrMap[Key],chunk);
-        }
-        for(auto& [_,phdr]:PhdrMap)
-            vec.push_back(phdr);
-    };
-
     // First phdr is for the program header itself
     vec.push_back(definePhdr(PT_PHDR,PF_R,8,&Ctx.OutPhdr));
 
     // Deal With Note Sections
-    GroupChunksIntoPhdrs(collect(Ctx.Chunks,IsNote),PT_NOTE,0);
+    {
+        auto chunks=Ctx.Chunks;
+        auto end=chunks.size();
+        for(decltype(end) i=0;i<end;){
+            auto first=chunks[i];
+            i++;
+            if(!IsNote(first))continue;
+            auto flags=toPhdrFlags(first);
+            auto align=first->getShdr()->sh_addralign;
+            vec.push_back(definePhdr(PT_NOTE,flags,align,first));
+            auto& phdr=vec.back();
+            for(;i<end&&IsNote(chunks[i])&&toPhdrFlags(chunks[i])==flags;i++){
+                pushIntoPhdr(phdr,chunks[i]);
+            }
+        }
+    };
+
 
     // Deal With Loadable Sections
-    GroupChunksIntoPhdrs(collect(Ctx.Chunks,[&IsBss](Chunk* chunk) -> bool {
-        if(isTbss(chunk))return false;
-        if((chunk->getShdr()->sh_flags&SHF_ALLOC)==0)return false;
-        return IsBss(chunk);
-    }),PT_LOAD,4096);
-    GroupChunksIntoPhdrs(collect(Ctx.Chunks,[&IsBss](Chunk* chunk) -> bool {
-        if(isTbss(chunk))return false;
-        if((chunk->getShdr()->sh_flags&SHF_ALLOC)==0)return false;
-        return !IsBss(chunk);
-    }),PT_LOAD,4096);
+    {
+        auto chunks=std::vector<Chunk*>();
+        for(auto chunk:Ctx.Chunks){
+            if(!isTbss(chunk))
+                chunks.push_back(chunk);
+        }
+
+        auto end=chunks.size();
+        for(decltype(end) i=0;i<end;){
+            auto first=chunks[i];
+            i++;
+            
+            if((first->getShdr()->sh_flags&SHF_ALLOC)==0)
+                break;
+
+            auto flags=toPhdrFlags(first);
+            auto align=4096;
+            vec.push_back(definePhdr(PT_LOAD,flags,align,first));
+            auto& phdr=vec.back();
+            
+            if(!IsBss(first)){
+                for(;i<end&&!IsBss(chunks[i])&&toPhdrFlags(chunks[i])==flags;i++){
+                    pushIntoPhdr(phdr,chunks[i]);
+                }
+            }
+            for(;i<end&&IsBss(chunks[i])&&toPhdrFlags(chunks[i])==flags;i++){
+                pushIntoPhdr(phdr,chunks[i]);
+            }
+        }
+    };
     
     // Deal With TLS Sections
-    GroupChunksIntoPhdrs(collect(Ctx.Chunks,IsTls),PT_TLS,1);
+    {
+        auto chunks=Ctx.Chunks;
+        auto end=chunks.size();
+
+        for(decltype(end) i=0;i<end;i++){
+            if(!IsTls(chunks[i]))
+                continue;
+            
+            auto first=chunks[i];
+            i++;
+            auto flags=toPhdrFlags(first);
+            auto align=1;
+            vec.push_back(definePhdr(PT_TLS,flags,align,first));
+            auto& phdr=vec.back();
+            for(;i<end&&IsTls(chunks[i]);i++){
+                pushIntoPhdr(phdr,chunks[i]);
+            }
+        }
+    }
 
     Ctx.TpAddr=vec.back().p_vaddr;
     return vec;
