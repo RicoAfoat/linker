@@ -129,7 +129,7 @@ InputSection::InputSection(ObjectFile* f,uint32_t shndx){
     };
 
     this->P2Align=toP2Align(shdr->sh_addralign);
-    // this->OutSec=OutputSection::getOutputSection(std::string(this->getName()),shdr->sh_type,shdr->sh_flags);
+    this->OutSec=OutputSection::getOutputSection(std::string(this->getName()),shdr->sh_type,shdr->sh_flags);
     // this->OutSec->Member.push_back(this);
 }
 
@@ -174,6 +174,10 @@ void InputSection::WriteTo(uint8_t* dst){
     memcpy(dst,Content,Size);
 
     if((getShdr()->sh_flags&SHF_ALLOC)!=0){
+        std::cerr<<"\tRelocating "<<this->getName()<<" From "<<this->File->getFileName()<<std::endl;
+        if(this->getName()==".text"&&this->File->getFileName()=="gconv_open.o"){
+            int a=0;
+        }
         ApplyRelocations(std::make_pair(dst,Size));
     }
 }
@@ -198,6 +202,8 @@ void InputSection::ApplyRelocations(std::pair<uint8_t*,size_t> SectionContent){
         auto A=relentry.r_addend;
         // 需要改写的位置的虚拟地址
         auto P=this->getAddr()+relentry.r_offset;
+
+        std::cerr<<"\t\t"<<sym->Name<<" "<<S<<" "<<A<<" "<<P<<std::endl;
 
         switch (ELF64_R_TYPE(relentry.r_info))
         {
@@ -225,13 +231,27 @@ void InputSection::ApplyRelocations(std::pair<uint8_t*,size_t> SectionContent){
             datacopy<uint32_t>(loc,uint32_t(S+A-P));
             break;
         case R_RISCV_HI20:
-            datacopy<uint32_t>(loc,uint32_t(S+A));
+            writeUtype(loc,uint32_t(S+A));
             break;
         case R_RISCV_LO12_I:
         case R_RISCV_LO12_S:
             {
-                auto val=S+A-Singleton<Context>().TpAddr;
+                auto val=S+A;
                 if(ELF64_R_TYPE(relentry.r_info)==R_RISCV_LO12_I){
+                    writeItype(loc,uint32_t(val));
+                } else{
+                    writeStype(loc,uint32_t(val));
+                }
+                if(signExtend(val,11)==val){
+                    setRs1(loc,0);
+                }
+                break;
+            }
+        case R_RISCV_TPREL_LO12_I: 
+        case R_RISCV_TPREL_LO12_S:
+            {
+                auto val=S+A-Singleton<Context>().TpAddr;
+                if(ELF64_R_TYPE(relentry.r_info)==R_RISCV_TPREL_LO12_I){
                     writeItype(loc,uint32_t(val));
                 } else{
                     writeStype(loc,uint32_t(val));

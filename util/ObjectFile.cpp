@@ -20,14 +20,13 @@ void ObjectFile::initFileStructure(){
         this->SymbolStrtab=this->getBytesFromIdx(this->SymtabSec->sh_link);
     }
     initSections();
+    initSymbols();
+    initMergeableSections();
 
     // skip .eh_frame for it is used for exception handling
     for(auto& sec:Sections)
         if(sec!=nullptr&&sec->isAlive&&sec->getName()==".eh_frame")
-            sec=nullptr;
-    
-    initSymbols();
-    initMergeableSections();
+            sec->isAlive=false;
 }
 
 void ObjectFile::initSections(){

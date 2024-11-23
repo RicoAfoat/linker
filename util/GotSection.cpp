@@ -11,7 +11,7 @@ GotSection::GotSection(){
 }
 
 void GotSection::addGotTpSym(Symbol* sym){
-    sym->GotTpIdx=int32_t(getShdr()->sh_addr/8);
+    sym->GotTpIdx=int32_t(getShdr()->sh_size/8);
     this->getShdr()->sh_size+=8;
     this->GotTpSyms.push_back(sym);
 }

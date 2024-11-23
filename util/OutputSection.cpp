@@ -15,10 +15,14 @@ void OutputSection::CopyBuf(){
     auto& Ctx=Singleton<Context>();
     if(SectionHeader.sh_type==SHT_NOBITS)
         return;
+
+    std::cerr<<"CopyBuf "<<this->getName()<<std::endl;
     
     auto base=Ctx.OutputBuf.data()+SectionHeader.sh_offset;
-    for(auto& i:Member)
+    for(auto& i:Member){
+        std::cerr<<"\tRanging "<<SectionHeader.sh_offset+i->offset<<" "<<SectionHeader.sh_offset+i->offset+i->Content.second<<std::endl;
         i->WriteTo(base);
+    }
 }
 
 OutputSection* OutputSection::getOutputSection(std::string Name,uint32_t Type,uint64_t Flags){

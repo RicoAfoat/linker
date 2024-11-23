@@ -119,7 +119,7 @@ void Passes::writeOutputFile(){
 
     std::cerr<<"chunks count:"<<Ctx.Chunks.size()<<std::endl;
 
-    for(int i=3;i<4;i++){
+    for(int i=0;i<32;i++){
         std::cerr<<Ctx.Chunks[i]->getName()<<std::endl;
         Ctx.Chunks[i]->CopyBuf();
     }
@@ -154,8 +154,6 @@ void Passes::BinSections(){
         for(auto& isec:Sections){
             if(isec==nullptr||!isec->isAlive)
                 continue;
-
-            isec->OutSec=OutputSection::getOutputSection(std::string(isec->getName()),isec->getShdr()->sh_type,isec->getShdr()->sh_flags);
 
             isec->OutSec->Member.push_back(isec.get());
         }
