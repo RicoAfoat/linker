@@ -54,8 +54,9 @@ void Passes::registerSectionPieces(){
 void Passes::createSyntheticSections(){
     auto& Ctx=Singleton<Context>();
     Ctx.Chunks.push_back(&Ctx.OutEhdr);
-    Ctx.Chunks.push_back(&Ctx.OutShdr);
     Ctx.Chunks.push_back(&Ctx.OutPhdr);
+    Ctx.Chunks.push_back(&Ctx.OutShdr);
+    Ctx.Chunks.push_back(&Ctx.GotSec);
 }
 
 uint64_t Passes::setOutputSectionOffsets(){
@@ -98,6 +99,7 @@ uint64_t Passes::setOutputSectionOffsets(){
             std::cerr<<chunk->getName()<<" "<<chunk->getShdr()->sh_offset<<" "<<chunk->getShdr()->sh_size<<std::endl;
         }
 
+        Ctx.OutPhdr.UpdateShdr();
         return size;
     }
 }
@@ -115,8 +117,15 @@ void Passes::writeOutputFile(){
     "final size:"<<filesize<<std::endl;
     Ctx.OutputBuf.resize(filesize);
 
-    for(auto& chunk:Ctx.Chunks)
-        chunk->CopyBuf();
+    std::cerr<<"chunks count:"<<Ctx.Chunks.size()<<std::endl;
+
+    for(int i=3;i<4;i++){
+        std::cerr<<Ctx.Chunks[i]->getName()<<std::endl;
+        Ctx.Chunks[i]->CopyBuf();
+    }
+    
+    // for(auto& chunk:Ctx.Chunks)
+        // chunk->CopyBuf();
 
     std::ofstream file(Ctx.OutputFile,std::ios::binary);
     assert(file.is_open());
@@ -173,9 +182,9 @@ void Passes::sortOutputSections(){
     std::sort(chunks.begin(),chunks.end(),[](Chunk* a,Chunk* b){
         auto ranka=a->rank();
         auto rankb=b->rank();
-        // if(ranka==rankb){
-        //     return a->getName()<b->getName();
-        // }
+        if(ranka==rankb){
+            return a->getName()<b->getName();
+        }
         return ranka<rankb;
     });
 }
@@ -184,4 +193,23 @@ void Passes::computeMergedSectionSizes(){
     auto& Msecs=Singleton<Context>().mergedSections;
     for(auto& msec:Msecs)
         msec->AssignOffsets();
+}
+
+void Passes::scanRelocations(){
+    for(auto& obj:Singleton<Context>().Objs)
+        obj->scanRelocations();
+
+    auto syms_worklist=std::vector<Symbol*>();
+    for(auto& obj:Singleton<Context>().Objs)
+        for(auto sym:obj->Symbols){
+            if(sym->File==obj.get()&&sym->Flags!=0){
+                syms_worklist.push_back(sym);
+            }
+        }
+
+    for(auto sym:syms_worklist){
+        if(sym->Flags&CustomSymbolFlags::NeedsGotTp)
+            Singleton<Context>().GotSec.addGotTpSym(sym);
+        sym->Flags=0;
+    }
 }

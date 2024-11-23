@@ -16,11 +16,9 @@ void OutputSection::CopyBuf(){
     if(SectionHeader.sh_type==SHT_NOBITS)
         return;
     
-    auto base=Ctx.OutputBuf.data();
-    for(auto& i:Member){
-        memcpy(base,i->Content.first,i->Content.second);
-        base+=i->Content.second;
-    }
+    auto base=Ctx.OutputBuf.data()+SectionHeader.sh_offset;
+    for(auto& i:Member)
+        i->WriteTo(base);
 }
 
 OutputSection* OutputSection::getOutputSection(std::string Name,uint32_t Type,uint64_t Flags){

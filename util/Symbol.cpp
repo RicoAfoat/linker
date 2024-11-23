@@ -37,3 +37,15 @@ void Symbol::setSectionFragment(SectionFragment* sf) {
     SecFrag=sf;
     InputSec=nullptr;
 }
+
+uint64_t Symbol::getAddr() {
+    if(InputSec!=nullptr)
+        return InputSec->getAddr()+Value;
+    if(SecFrag!=nullptr)
+        return SecFrag->getAddr()+Value;
+    return Value;
+}
+
+uint64_t Symbol::getGotTpAddr() {
+    return Singleton<Context>().GotSec.getShdr()->sh_addr+GotTpIdx*8;
+}

@@ -20,6 +20,12 @@ void ObjectFile::initFileStructure(){
         this->SymbolStrtab=this->getBytesFromIdx(this->SymtabSec->sh_link);
     }
     initSections();
+
+    // skip .eh_frame for it is used for exception handling
+    for(auto& sec:Sections)
+        if(sec!=nullptr&&sec->isAlive&&sec->getName()==".eh_frame")
+            sec=nullptr;
+    
     initSymbols();
     initMergeableSections();
 }
@@ -44,6 +50,18 @@ void ObjectFile::initSections(){
             Sections[i].reset(new InputSection(this,i));
             break;
         }
+    }
+
+    for(decltype(ElfSections.size()) i=0,limi=ElfSections.size();i<limi;i++){
+        auto elfsec=ElfSections[i];
+        if(elfsec->sh_type!=SHT_RELA)continue;
+
+        // sh_info is the index of the section to which the relocations apply
+        assert(elfsec->sh_info<limi);
+        auto rela_isec=Sections[elfsec->sh_info].get();
+        if(rela_isec==nullptr)continue;
+        assert(rela_isec->RelsecIdx==UINT32_MAX);
+        rela_isec->RelsecIdx=uint32_t(i);
     }
 }
 
@@ -225,3 +243,14 @@ void ObjectFile::registerSectionPieces(){
         sym->Value=offset;
     }
 }
+
+void ObjectFile::scanRelocations(){
+    for(auto& isec:Sections){
+        if(
+            isec!=nullptr&&
+            isec->isAlive&&
+            (isec->getShdr()->sh_flags&SHF_ALLOC)!=0
+        )
+            isec->ScanRelocations();
+    }
+}   

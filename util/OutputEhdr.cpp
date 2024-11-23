@@ -26,6 +26,7 @@ void OutputEhdr::CopyBuf(){
     ehdr.e_entry=getEntryAddr();
     ehdr.e_phoff=Ctx.OutPhdr.getShdr()->sh_offset;
     ehdr.e_shoff=Ctx.OutShdr.getShdr()->sh_offset;
+    ehdr.e_flags=getFlags();
     ehdr.e_ehsize=sizeof(Ehdr);
     ehdr.e_phentsize=sizeof(Phdr);
     ehdr.e_phnum=uint16_t(Ctx.OutPhdr.getShdr()->sh_size/sizeof(Phdr));

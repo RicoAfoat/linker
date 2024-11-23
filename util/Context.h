@@ -14,6 +14,7 @@
 #include "OutputSection.h"
 #include "OutputShdr.h"
 #include "OutputPhdr.h"
+#include "GotSection.h"
 
 struct Context{
     std::string OutputFile="a.out";
@@ -40,6 +41,7 @@ struct Context{
     OutputEhdr OutEhdr;
     OutputShdr OutShdr;
     OutputPhdr OutPhdr;
+    GotSection GotSec;
 
     std::vector<uint8_t> OutputBuf;
 };

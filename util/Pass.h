@@ -14,4 +14,5 @@ void BinSections();
 uint64_t setOutputSectionOffsets();
 void sortOutputSections();
 void computeMergedSectionSizes();
+void scanRelocations();
 } // namespace Passes

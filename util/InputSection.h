@@ -16,7 +16,9 @@ struct InputSection{
     bool isAlive;
     uint8_t P2Align=0;
 
-    uint32_t offset=0;
+    uint32_t offset=UINT32_MAX;
+    uint32_t RelsecIdx=UINT32_MAX;
+
     OutputSection* OutSec=nullptr;
 
     InputSection()=delete;
@@ -24,6 +26,15 @@ struct InputSection{
     
     Shdr* getShdr();
     std::string_view getName();
+
+    uint64_t getAddr();
+
+    std::pair<Rela*,size_t> getRels();
+    void ScanRelocations();
+
+    void WriteTo(uint8_t* dst/**/);
+
+    void ApplyRelocations(std::pair<uint8_t*,size_t>);
 };
 
 

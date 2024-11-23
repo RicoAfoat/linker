@@ -29,6 +29,7 @@ int main(int argc,char **argv){
     Passes::createSyntheticSections();
 
     Passes::BinSections();
+    Passes::scanRelocations();
     Passes::collectOutputSections();
     Passes::computeSectionSizes();
     Passes::sortOutputSections();

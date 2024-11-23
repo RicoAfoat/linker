@@ -37,4 +37,6 @@ public:
     MergeableSection* splitSection(InputSection* isec);
 
     void registerSectionPieces();
+
+    void scanRelocations();
 };

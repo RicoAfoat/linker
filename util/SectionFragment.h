@@ -7,4 +7,5 @@ struct SectionFragment{
     uint8_t P2Align=0;
     bool isAlive=false;
     SectionFragment(MergedSection* os);
+    uint64_t getAddr();
 };

@@ -11,6 +11,14 @@ using Sym=Elf64_Sym;
 using ArHdr=ar_hdr;
 using Phdr=Elf64_Phdr;
 
+using Rela=Elf64_Rela;
+// struct Rela{
+//     uint64_t Offset;
+//     uint32_t Type;
+//     uint32_t Sym;
+//     int64_t Addend;
+// };
+
 const uint64_t IMAGE_BASE=0x200000;
 
 bool IsAbs(Sym*);
